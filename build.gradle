@@ -56,27 +56,6 @@ gradlePlugin {
     }
 }
 
-//mainClassName = "org.openrndr.docgen.GradlePluginKt"
-//publishing {
-////    publications {
-////        maven(MavenPublication) {
-////            groupId = 'org.openrndr.docgen'
-////            artifactId = 'openrndr-docgen'
-////            version = '1.0-SNAPSHOT'
-////
-////            from components.java
-////        }
-////    }
-////
-////    repositories {
-////        maven {
-////            url = "$buildDir/repo"
-////        }
-////    }
-//}
-
-
-
 
 test {
     useJUnitPlatform {
