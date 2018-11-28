@@ -164,12 +164,8 @@ open class ServeDocsTask @Inject constructor() : DefaultTask() {
     }
     @TaskAction
     fun run() {
-        println(docsifyBuildDir)
-        println(docsifyBuildDir.exists())
         project.exec { exec ->
             exec.workingDir = docsifyBuildDir
-            println(exec.workingDir)
-            println(exec.workingDir.exists())
             exec.commandLine("docker-compose")
             exec.args = listOf("up")
         }
