@@ -14,10 +14,10 @@ annotation class Application
     AnnotationTarget.CLASS
 )
 @Retention(AnnotationRetention.SOURCE)
-annotation class Code(val text: String) {
+annotation class Code {
     @Target(AnnotationTarget.EXPRESSION)
     @Retention(AnnotationRetention.SOURCE)
-    annotation class Block(val text: String)
+    annotation class Block
 }
 
 @Target(
