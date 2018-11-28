@@ -8,7 +8,10 @@ annotation class Application
 @Target(
     AnnotationTarget.EXPRESSION,
     AnnotationTarget.FUNCTION,
-    AnnotationTarget.PROPERTY
+    AnnotationTarget.PROPERTY,
+    AnnotationTarget.FIELD,
+    AnnotationTarget.LOCAL_VARIABLE,
+    AnnotationTarget.CLASS
 )
 @Retention(AnnotationRetention.SOURCE)
 annotation class Code(val text: String) {
@@ -51,7 +54,14 @@ class Media {
 }
 
 
-@Target(AnnotationTarget.EXPRESSION)
+@Target(
+    AnnotationTarget.EXPRESSION,
+    AnnotationTarget.FUNCTION,
+    AnnotationTarget.PROPERTY,
+    AnnotationTarget.FIELD,
+    AnnotationTarget.LOCAL_VARIABLE,
+    AnnotationTarget.CLASS
+)
 @Retention(AnnotationRetention.SOURCE)
 annotation class Exclude
 
