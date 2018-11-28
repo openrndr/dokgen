@@ -156,6 +156,26 @@ open class DocsifyTask @Inject constructor() : DefaultTask() {
 
 }
 
+open class ServeDocsTask @Inject constructor() : DefaultTask() {
+    val docsifyBuildDir = File(project.buildDir, "$PLUGIN_NAME/docsify")
+    init {
+        group = "dokgen"
+        description = "runs the serves docs"
+    }
+    @TaskAction
+    fun run() {
+        println(docsifyBuildDir)
+        println(docsifyBuildDir.exists())
+        project.exec { exec ->
+            exec.workingDir = docsifyBuildDir
+            println(exec.workingDir)
+            println(exec.workingDir.exists())
+            exec.commandLine("docker-compose")
+            exec.args = listOf("up")
+        }
+    }
+}
+
 
 class GradlePlugin : Plugin<Project> {
     override fun apply(project: Project) {
@@ -188,6 +208,10 @@ class GradlePlugin : Plugin<Project> {
             dokGenTask.finalizedBy(docsifyTask)
 
             docsifyTask.dependsOn(dokGenTask)
+
+
+            val serveDocsTask = project.tasks.create("serveDocs", ServeDocsTask::class.java)
+            serveDocsTask.dependsOn(docsifyTask)
         }
     }
 }
