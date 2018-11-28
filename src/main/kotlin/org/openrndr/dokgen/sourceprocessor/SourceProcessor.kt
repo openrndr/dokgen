@@ -23,7 +23,7 @@ object SourceProcessor {
     fun process(
         source: String,
         packageDirective: String,
-        mkLink: ((Int) -> String)?
+        mkLink: ((Int) -> String)? = null
     ): Result {
         val doc = Doc()
         val applications = mutableListOf<AppModel>()
