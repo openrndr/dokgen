@@ -1,4 +1,4 @@
-package org.openrndr.docgen.sourceprocessor
+package org.openrndr.dokgen.sourceprocessor
 
 import kastree.ast.Node
 

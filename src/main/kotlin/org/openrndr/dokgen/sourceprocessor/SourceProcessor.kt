@@ -1,11 +1,11 @@
-package org.openrndr.docgen.sourceprocessor
+package org.openrndr.dokgen.sourceprocessor
 
 import kastree.ast.MutableVisitor
 import kastree.ast.Node
 import kastree.ast.Visitor
 import kastree.ast.Writer
 import kastree.ast.psi.Parser
-import org.openrndr.docgen.Doc
+import org.openrndr.dokgen.Doc
 
 
 data class AppModel(
@@ -20,7 +20,11 @@ object SourceProcessor {
         val media: List<String>
     )
 
-    fun process(source: String, packageDirective: String): Result {
+    fun process(
+        source: String,
+        packageDirective: String,
+        mkLink: ((Int) -> String)?
+    ): Result {
         val doc = Doc()
         val applications = mutableListOf<AppModel>()
 
@@ -56,6 +60,7 @@ object SourceProcessor {
 
         }
 
+        var appCount = -1
         Visitor.visit(astWithoutExcluded) { v, parent ->
             when (v) {
                 is Node.WithModifiers -> {
@@ -86,6 +91,12 @@ object SourceProcessor {
                         val annotation = v.anns.first().anns.first()
                         val annotationName = annotation.names.joinToString(".")
                         when (annotationName) {
+
+                            "Application" -> {
+                                println("processing App-$appCount")
+                                appCount++
+                            }
+
                             "Text" -> {
                                 val text = stringExpr(v.expr)
                                 doc.elements.add(
@@ -102,6 +113,18 @@ object SourceProcessor {
                                 doc.elements.add(
                                     Doc.Element.Code(codeText)
                                 )
+
+                                mkLink?.let {
+                                    if (appCount != -1) {
+                                        val link = mkLink(appCount)
+                                        println("made link: $link")
+                                        doc.elements.add(
+                                            Doc.Element.Markdown("""
+                                                [Link to the full example]($link)
+                                            """.trimIndent())
+                                        )
+                                    }
+                                }
                             }
                             "Code.Block" -> {
                                 val call = v.expr
@@ -117,6 +140,19 @@ object SourceProcessor {
                                     doc.elements.add(
                                         Doc.Element.Code(codeText)
                                     )
+
+                                    mkLink?.let {
+                                        if (appCount != -1) {
+                                            val link = mkLink(appCount)
+                                            println("made link: $link")
+                                            doc.elements.add(
+                                                Doc.Element.Markdown("""
+                                                [Link to the full example]($link)
+                                            """.trimIndent())
+                                            )
+                                        }
+                                    }
+
                                 } else {
                                     throw RuntimeException("you can only use the Code.Block annotation on run blocks.")
                                 }

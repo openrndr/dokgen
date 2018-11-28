@@ -1,6 +1,6 @@
-package org.openrndr.docgen
+package org.openrndr.dokgen
 
-import org.openrndr.docgen.sourceprocessor.SourceProcessor
+import org.openrndr.dokgen.sourceprocessor.SourceProcessor
 import java.io.File
 import java.nio.file.Path
 
@@ -8,7 +8,7 @@ fun File.relativeDir(file: File): Path {
     return toPath().relativize(file.toPath()).parent ?: File("").toPath()
 }
 
-object DocGen {
+object DokGen {
     private fun determinePackageDirective(sourcesRoot: File, sourceFile: File): String {
         val dirPathRelativeToRoot = sourcesRoot.relativeDir(sourceFile)
         val parts = dirPathRelativeToRoot.map { part ->
@@ -50,8 +50,11 @@ object DocGen {
         sourceFiles: List<File>,
         sourcesRoot: File,
         mdOutputDir: File,
-        examplesOutputDir: File
+        examplesOutputDir: File,
+        webRootUrl: String?
     ) {
+
+
         sourceFiles.forEach { file ->
             println("processing $file")
             val packageDirective =
@@ -60,17 +63,28 @@ object DocGen {
                     file
                 )
 
+
+            val srcFileName = file.nameWithoutExtension
+            val relativeDir = sourcesRoot.relativeDir(file).toString()
+
+
+            val mkLink = webRootUrl?.let { it ->
+                { index: Int ->
+                    val paddedIndex = "$index".padStart(3, '0')
+                    "$it/examples/$relativeDir/$srcFileName$paddedIndex.kt"
+                }
+            }
+
             val fileContents = file.readText()
             val result = SourceProcessor.process(
                 fileContents,
-                packageDirective = packageDirective
+                packageDirective = packageDirective,
+                mkLink = mkLink
             )
 
-            val relativeDir = sourcesRoot.relativeDir(file).toString()
             val docsOutDir = File(mdOutputDir, relativeDir)
             docsOutDir.mkdirs()
 
-            val srcFileName = file.nameWithoutExtension
             val md = File(docsOutDir, "$srcFileName.md")
             md.writeText(result.doc)
 
@@ -88,7 +102,9 @@ object DocGen {
     }
 
     fun getExampleClasses(sourceFiles: List<File>, sourcesRoot: File): List<String> {
-        return sourceFiles.map { file ->
+        return sourceFiles.filter {
+            it.extension == "kt"
+        }.map { file ->
             val pd = determinePackageDirective(sourcesRoot, file).filter { ch -> ch != '`' }
             "$pd.${file.nameWithoutExtension}Kt"
         }

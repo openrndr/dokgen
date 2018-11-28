@@ -1,4 +1,4 @@
-import org.openrndr.docgen.annotations.Application
+import org.openrndr.dokgen.annotations.Application
 import java.io.File
 
 

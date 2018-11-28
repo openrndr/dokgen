@@ -1,4 +1,4 @@
-import org.openrndr.docgen.annotations.Text
+import org.openrndr.dokgen.annotations.Text
 
 
 fun main(args: Array<String>) {

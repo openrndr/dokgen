@@ -1,6 +1,6 @@
-package org.openrndr.docgen.sourceprocessor
+package org.openrndr.dokgen.sourceprocessor
 
-import org.openrndr.docgen.Doc
+import org.openrndr.dokgen.Doc
 
 fun appTemplate(pkg: String, imports: List<String>, body: String): String {
     return """

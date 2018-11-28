@@ -1,8 +1,7 @@
 @file:Suppress("UNUSED_EXPRESSION")
 
-import org.openrndr.docgen.annotations.Application
-import org.openrndr.docgen.annotations.Media
-import org.openrndr.docgen.annotations.Text
+import org.openrndr.dokgen.annotations.Application
+import org.openrndr.dokgen.annotations.Media
 
 
 fun main(args: Array<String>) {

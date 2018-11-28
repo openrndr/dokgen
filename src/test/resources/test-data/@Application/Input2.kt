@@ -1,5 +1,5 @@
-import org.openrndr.docgen.annotations.Application
-import org.openrndr.docgen.annotations.Exclude
+import org.openrndr.dokgen.annotations.Application
+import org.openrndr.dokgen.annotations.Exclude
 
 
 fun main(args: Array<String>) {

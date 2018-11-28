@@ -36,7 +36,9 @@ project.ext.spekVersion = "2.0"
 
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-    compile 'com.github.cretz:kastree:master-SNAPSHOT'
+    compile 'com.github.cretz.kastree:ast-jvm:4566e53c9e'
+    compile 'com.github.cretz.kastree:ast-psi:4566e53c9e'
+
     compile gradleApi()
 
     // assertion
@@ -50,8 +52,8 @@ dependencies {
 gradlePlugin {
     plugins {
         simplePlugin {
-            id = 'org.openrndr.openrndr-docgen-plugin'
-            implementationClass = 'org.openrndr.docgen.DocGenPlugin'
+            id = 'org.openrndr.dokgen-gradle'
+            implementationClass = 'org.openrndr.dokgen.GradlePlugin'
         }
     }
 }

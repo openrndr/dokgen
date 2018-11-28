@@ -1,4 +1,4 @@
-import org.openrndr.docgen.annotations.Media
+import org.openrndr.dokgen.annotations.Media
 
 
 fun main(args: Array<String>) {

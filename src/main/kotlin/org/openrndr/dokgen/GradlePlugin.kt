@@ -1,4 +1,4 @@
-package org.openrndr.docgen
+package org.openrndr.dokgen
 
 import org.gradle.api.Action
 import org.gradle.api.DefaultTask
@@ -10,41 +10,45 @@ import org.gradle.api.tasks.incremental.IncrementalTaskInputs
 import java.io.File
 import javax.inject.Inject
 
-open class MarkdownConf {
-    var media: String? = null
-    var output: String? = null
-}
+const val PLUGIN_NAME = "dokgen"
 
-open class ExamplesConf {
-    var packageDirective: String? = null
-    var output: String? = null
-}
-
-class DocGenException(message: String) : Exception("docgen exception: $message")
+class DokGenException(message: String) : Exception("$PLUGIN_NAME exception: $message")
 
 
-open class DocGenPluginExtension @Inject constructor(objectFactory: ObjectFactory) {
-    var sources: String? = null
-    var markdownConf: MarkdownConf? = objectFactory.newInstance(MarkdownConf::class.java)
+// this class provides the configuration dsl
+// the inner classes represent configurable data
+// the methods represent closures in the dsl through which configuration can be set
+open class DokGenPluginExtension @Inject constructor(objectFactory: ObjectFactory) {
+    open class ExamplesConf {
+        var webRootUrl: String? = null
+    }
+
+    open class RunnerConf {
+        var jvmArgs = mutableListOf<String>()
+    }
+
     var examplesConf: ExamplesConf? = objectFactory.newInstance(ExamplesConf::class.java)
+    var runnerConf: RunnerConf? = objectFactory.newInstance(RunnerConf::class.java)
 
-    fun markdown(action: Action<MarkdownConf>) {
-        markdownConf?.let {
+
+    fun runner(action: Action<RunnerConf>) {
+        runnerConf?.let {
             action.execute(it)
-        } ?: throw DocGenException("no markdown configuration was defined")
+        }
     }
 
     fun examples(action: Action<ExamplesConf>) {
         examplesConf?.let {
             action.execute(it)
-        } ?: throw DocGenException("no examples configuration was defined")
+        }
     }
+
 }
 
-open class ProcessSourcesTask @Inject constructor() : DefaultTask() {
+open class ProcessSourcesTask @Inject constructor(val examplesConf: DokGenPluginExtension.ExamplesConf?) : DefaultTask() {
 
     init {
-        group = "docgen"
+        group = PLUGIN_NAME
         description = "processes into markdown and examples"
     }
 
@@ -52,7 +56,7 @@ open class ProcessSourcesTask @Inject constructor() : DefaultTask() {
     var sourcesDir: File = File(project.projectDir, "src/main/kotlin/docs")
 
     @OutputDirectory
-    var mdOutputDir: File = File(project.buildDir, "docgen/md")
+    var mdOutputDir: File = File(project.buildDir, "$PLUGIN_NAME/md")
 
     @OutputDirectory
     var examplesOutputDir: File = File(project.projectDir, "src/main/kotlin/examples")
@@ -64,18 +68,21 @@ open class ProcessSourcesTask @Inject constructor() : DefaultTask() {
         inputs.outOfDate {
             toProcess.add(it.file)
         }
-        DocGen.processSources(
+        DokGen.processSources(
             toProcess,
             sourcesDir,
             mdOutputDir,
-            examplesOutputDir
+            examplesOutputDir,
+            webRootUrl = examplesConf?.webRootUrl
         )
     }
 }
 
-open class RunExamplesTask @Inject constructor() : DefaultTask() {
+open class RunExamplesTask @Inject constructor(
+    private val runnerConf: DokGenPluginExtension.RunnerConf?
+) : DefaultTask() {
     init {
-        group = "docgen"
+        group = PLUGIN_NAME
         description = "run the exported examples programs"
     }
 
@@ -93,13 +100,15 @@ open class RunExamplesTask @Inject constructor() : DefaultTask() {
         val sourceSetContainer = project.property("sourceSets") as SourceSetContainer
         val ss = sourceSetContainer.getByName("main")
 
-        val execClasses = DocGen.getExampleClasses(toRun, File(project.projectDir, "src/main/kotlin/examples"))
+        val execClasses = DokGen.getExampleClasses(toRun, File(project.projectDir, "src/main/kotlin/examples"))
 
         execClasses.forEach { klass ->
             try {
                 project.javaexec { spec ->
                     spec.classpath = ss.runtimeClasspath
-                    spec.jvmArgs = listOf("-XstartOnFirstThread")
+                    runnerConf?.let {
+                        spec.jvmArgs = it.jvmArgs
+                    }
                     spec.main = klass
                 }
             } catch (e: Exception) {
@@ -112,14 +121,14 @@ open class RunExamplesTask @Inject constructor() : DefaultTask() {
 
 open class DocsifyTask @Inject constructor() : DefaultTask() {
     init {
-        group = "docgen"
+        group = "dokgen"
         description = "docsify"
     }
 
     val docsifySources = javaClass.classLoader.getResource("docsify")
-    val docgenBuildDir = File(project.buildDir, "docgen")
-    val docgenMdDir = File(docgenBuildDir, "md")
-    val docsifyBuildDir = File(project.buildDir, "docgen/docsify")
+    val dokgenBuildDir = File(project.buildDir, PLUGIN_NAME)
+    val dokgenMdDir = File(dokgenBuildDir, "md")
+    val docsifyBuildDir = File(project.buildDir, "$PLUGIN_NAME/docsify")
     var docsifyDocsDir: File = File(docsifyBuildDir, "docs")
     var mediaInputDirectory: File = File(project.projectDir, "media")
     var mediaOutputDirectory: File = File(docsifyDocsDir, "media")
@@ -130,7 +139,7 @@ open class DocsifyTask @Inject constructor() : DefaultTask() {
         val jar = project.zipTree(docsifySources.path.split("!")[0])
         project.copy { spec ->
             spec.from(jar)
-            spec.into(docgenBuildDir)
+            spec.into(dokgenBuildDir)
             spec.include("docsify/**/*")
         }
 
@@ -140,7 +149,7 @@ open class DocsifyTask @Inject constructor() : DefaultTask() {
         }
 
         project.copy { spec ->
-            spec.from(docgenMdDir)
+            spec.from(dokgenMdDir)
             spec.into(docsifyDocsDir)
         }
     }
@@ -148,31 +157,37 @@ open class DocsifyTask @Inject constructor() : DefaultTask() {
 }
 
 
-class DocGenPlugin : Plugin<Project> {
+class GradlePlugin : Plugin<Project> {
     override fun apply(project: Project) {
-        val conf = project.extensions.create("docgen",
-            DocGenPluginExtension::class.java,
+        val conf = project.extensions.create(PLUGIN_NAME,
+            DokGenPluginExtension::class.java,
             project.objects
         )
 
+//        val sourceSets = project.property("sourceSets") as SourceSetContainer
+//        sourceSets.create("doks") { conf ->
+//            conf.allSource.srcDir("${project.projectDir}/doks")
+//        }
+
         project.afterEvaluate { loaded ->
-            val docGen = project.tasks.create("docgen")
-            docGen.group = "docgen"
-            docGen.description = "do the work"
 
-            val processSources = project.tasks.create("processSources", ProcessSourcesTask::class.java)
+            val dokGenTask = project.tasks.create(PLUGIN_NAME)
+            dokGenTask.group = PLUGIN_NAME
+            dokGenTask.description = "do the work"
 
-            val runExamples = project.tasks.create("runExamples", RunExamplesTask::class.java)
+            val processSources = project.tasks.create("processSources", ProcessSourcesTask::class.java, conf.examplesConf)
+            val runExamples = project.tasks.create("runExamples", RunExamplesTask::class.java, conf.runnerConf)
+
             runExamples.dependsOn(processSources.path)
             runExamples.dependsOn(project.tasks.getByPath("compileKotlin"))
 
-            docGen.dependsOn(processSources.path)
-            docGen.dependsOn(runExamples.path)
+            dokGenTask.dependsOn(processSources.path)
+            dokGenTask.dependsOn(runExamples.path)
 
             val docsifyTask = project.tasks.create("docsify", DocsifyTask::class.java)
-            docGen.finalizedBy(docsifyTask)
+            dokGenTask.finalizedBy(docsifyTask)
 
-            docsifyTask.dependsOn(docGen)
+            docsifyTask.dependsOn(dokGenTask)
         }
     }
 }

@@ -1,6 +1,6 @@
-package org.openrndr.docgen
+package org.openrndr.dokgen
 
-import org.openrndr.docgen.sourceprocessor.SourceProcessor
+import org.openrndr.dokgen.sourceprocessor.SourceProcessor
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.io.File
@@ -131,7 +131,7 @@ object SourceProcessorSpec : Spek({
                 src,
                 "test"
             )
-            it("returns an image link") {
+            it("returns an image githubUrl") {
                 assertEquals(expected, result.doc.trim())
             }
         }

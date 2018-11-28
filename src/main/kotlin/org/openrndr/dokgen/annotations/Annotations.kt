@@ -1,4 +1,4 @@
-package org.openrndr.docgen.annotations
+package org.openrndr.dokgen.annotations
 
 
 @Target(AnnotationTarget.EXPRESSION)

@@ -1,4 +1,4 @@
-package org.openrndr.docgen
+package org.openrndr.dokgen
 
 
 data class Doc(
