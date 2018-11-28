@@ -158,10 +158,12 @@ open class DocsifyTask @Inject constructor() : DefaultTask() {
 
 open class ServeDocsTask @Inject constructor() : DefaultTask() {
     val docsifyBuildDir = File(project.buildDir, "$PLUGIN_NAME/docsify")
+
     init {
         group = "dokgen"
         description = "runs the serves docs"
     }
+
     @TaskAction
     fun run() {
         project.exec { exec ->
@@ -191,11 +193,14 @@ class GradlePlugin : Plugin<Project> {
             dokGenTask.group = PLUGIN_NAME
             dokGenTask.description = "do the work"
 
+            val compileKotlinTask = project.tasks.getByPath("compileKotlin")
             val processSources = project.tasks.create("processSources", ProcessSourcesTask::class.java, conf.examplesConf)
+            processSources.dependsOn(compileKotlinTask)
+
             val runExamples = project.tasks.create("runExamples", RunExamplesTask::class.java, conf.runnerConf)
 
             runExamples.dependsOn(processSources.path)
-            runExamples.dependsOn(project.tasks.getByPath("compileKotlin"))
+            runExamples.dependsOn(compileKotlinTask)
 
             dokGenTask.dependsOn(processSources.path)
             dokGenTask.dependsOn(runExamples.path)
