@@ -70,10 +70,6 @@ object SourceProcessor {
                         val annotationName = annotation.names.joinToString(".")
                         when (annotationName) {
                             "Code" -> {
-                                val text = stringExpr(annotation.args.first().expr)
-                                doc.elements.add(
-                                    Doc.Element.Markdown(text)
-                                )
                                 val field = v.javaClass.getDeclaredField("mods")
                                 field.isAccessible = true
                                 field.set(v, modsWithoutAnnotations)
@@ -104,10 +100,6 @@ object SourceProcessor {
                                 )
                             }
                             "Code" -> {
-                                val text = stringExpr(annotation.args.first().expr)
-                                doc.elements.add(
-                                    Doc.Element.Markdown(text)
-                                )
                                 val codeWithoutAnnotations = v.copy(anns = emptyList())
                                 val codeText = Writer.write(codeWithoutAnnotations)
                                 doc.elements.add(
@@ -129,11 +121,6 @@ object SourceProcessor {
                             "Code.Block" -> {
                                 val call = v.expr
                                 if (call is Node.Expr.Call && (call.expr as Node.Expr.Name).name == "run") {
-                                    val text = stringExpr(annotation.args.first().expr)
-                                    doc.elements.add(
-                                        Doc.Element.Markdown(text)
-                                    )
-
                                     val codeText = call.lambda!!.func.block!!.stmts.map { e ->
                                         Writer.write(e)
                                     }.joinToString("\n")

@@ -1,10 +1,17 @@
+@file:Suppress("UNUSED_EXPRESSION")
+
 import org.openrndr.dokgen.annotations.Code
 import org.openrndr.dokgen.annotations.Exclude
+import org.openrndr.dokgen.annotations.Text
 
 
 fun main(args: Array<String>) {
 
-    @Code("here's some code")
+
+    @Text
+    "here's some code"
+
+    @Code
     run {
         println("hello world")
 

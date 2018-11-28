@@ -2,7 +2,7 @@ import org.openrndr.dokgen.annotations.Code
 
 
 fun main(args: Array<String>) {
-    @Code("This is some code")
+    @Code
     fun foo(): String {
         return "bar"
     }
