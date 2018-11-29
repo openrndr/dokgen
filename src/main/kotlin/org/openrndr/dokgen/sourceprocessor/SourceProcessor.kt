@@ -13,12 +13,18 @@ data class AppModel(
     var body: String? = null
 )
 
+
 object SourceProcessor {
     data class Result(
         val doc: String,
         val appSources: List<String>,
         val media: List<String>
     )
+
+
+    fun String.normalizeAnnotation(): String {
+        return this.replace("org.openrndr.dokgen.annotations.", "")
+    }
 
     fun process(
         source: String,
@@ -35,7 +41,7 @@ object SourceProcessor {
             when (v) {
                 is Node.Expr.Annotated -> {
                     val annotation = v.anns.first().anns.first()
-                    val annotationName = annotation.names.joinToString(".")
+                    val annotationName = annotation.names.joinToString(".").normalizeAnnotation()
                     val clean = v.copy(anns = emptyList())
                     when (annotationName) {
                         "Exclude" -> {
@@ -67,7 +73,8 @@ object SourceProcessor {
                     if (v.anns.isNotEmpty()) {
                         val modsWithoutAnnotations = v.mods.filter { it !is Node.Modifier.AnnotationSet }
                         val annotation = v.anns.first().anns.first()
-                        val annotationName = annotation.names.joinToString(".")
+                        val annotationName = annotation.names.joinToString(".").normalizeAnnotation()
+                        println(annotationName)
                         when (annotationName) {
                             "Code" -> {
                                 val field = v.javaClass.getDeclaredField("mods")
@@ -84,14 +91,23 @@ object SourceProcessor {
                 }
                 is Node.Expr.Annotated -> {
                     if (v.anns.isNotEmpty()) {
-                        val annotation = v.anns.first().anns.first()
-                        val annotationName = annotation.names.joinToString(".")
-                        when (annotationName) {
 
-                            "Application" -> {
-                                println("processing App-$appCount")
-                                appCount++
+                        val annotation = v.anns.first().anns.first()
+                        val maybeApplication = annotation.names.joinToString(".").normalizeAnnotation()
+
+                        // when this annotation is Application then just increase the appCount and process the next annotation if exists
+                        val annotationName = if (maybeApplication == "Application") {
+                            appCount++
+                            if (v.anns.size > 1) {
+                                v.anns[1].anns.first().names.joinToString(".").normalizeAnnotation()
+                            } else {
+                                null
                             }
+                        } else {
+                            maybeApplication
+                        }
+
+                        when (annotationName) {
 
                             "Text" -> {
                                 val text = stringExpr(v.expr)
@@ -168,7 +184,7 @@ object SourceProcessor {
                 is Node.Expr.Annotated -> {
                     val annotation = v.anns.first().anns.first()
                     val withoutAnns = v.copy(anns = emptyList())
-                    val annotationName = annotation.names.first()
+                    val annotationName = annotation.names.first().normalizeAnnotation()
                     if (annotationName == "Application") {
                         val codeTxt = Writer.write(withoutAnns)
                         applications.add(
@@ -178,7 +194,7 @@ object SourceProcessor {
                         )
                     }
 
-                    when (annotationName) {
+                    when (annotationName.normalizeAnnotation()) {
                         "Text", "Media" -> {
                             withoutAnns.copy(
                                 expr = (v.expr as Node.Expr.StringTmpl).copy(

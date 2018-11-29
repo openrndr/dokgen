@@ -8,7 +8,61 @@ fun File.relativeDir(file: File): Path {
     return toPath().relativize(file.toPath()).parent ?: File("").toPath()
 }
 
+
 object DokGen {
+    fun untilFirstNumSequence(string: String): String? {
+        val folded = string.fold("") { acc, x ->
+            if (acc.isNotEmpty() && acc.last().isDigit() && !x.isDigit()) {
+                acc
+            } else {
+                acc + x.toString()
+            }
+        }
+        return if (folded == string) {
+            null
+        } else {
+            folded
+        }
+    }
+
+    fun prefix(string: String): String? {
+        return string.split("_").firstOrNull()?.let { it + "_" }
+    }
+
+    fun String.removeBlankLines(): String {
+        return this.split("\n").filter { !it.isBlank() }.joinToString("\n")
+    }
+
+    fun splitCamelCased(string: String): List<String> {
+        data class Acc(
+            val current: String = "",
+            val words: List<String> = listOf(),
+            val position: Int = 0
+        )
+
+        val accumulated = string.fold(Acc()) { acc, cursor ->
+            if (acc.position == string.length - 1) {
+                acc.copy(
+                    words = acc.words + (acc.current + cursor)
+                )
+            } else {
+                if (acc.current.isNotEmpty() && acc.current.last().isLowerCase() && cursor.isUpperCase()) {
+                    acc.copy(
+                        current = cursor.toString(),
+                        words = acc.words + acc.current,
+                        position = acc.position + 1
+                    )
+                } else {
+                    acc.copy(
+                        current = acc.current + cursor,
+                        position = acc.position + 1
+                    )
+                }
+            }
+        }
+        return accumulated.words
+    }
+
     private fun determinePackageDirective(sourcesRoot: File, sourceFile: File): String {
         val dirPathRelativeToRoot = sourcesRoot.relativeDir(sourceFile)
         val parts = dirPathRelativeToRoot.map { part ->
@@ -24,25 +78,41 @@ object DokGen {
         return "examples.$relativePackageDirective"
     }
 
+
     fun generateIndex(sourcesRoot: File): String {
 
         fun go(root: File, depth: Int): String {
             val indent = List(depth) { "  " }.joinToString("")
-            return root.listFiles().map { file ->
-                val title = file.nameWithoutExtension.filter {
-                    it.isLetter()
-                }.capitalize()
-                val result = if (file.isDirectory) {
-                    "- $title" + "\n" + go(file, depth + 1)
-                } else {
-                    val link = file.relativeTo(sourcesRoot).toString().replace("kt", "md")
-                    "- [$title]($link)"
-                }
-                result.prependIndent(indent)
-            }.joinToString("\n")
+            return root.listFiles()
+                .sortedBy {
+                    untilFirstNumSequence(it.name) ?: it.name
+                }.map { file ->
+
+                    val title = file.nameWithoutExtension.run {
+                        val name = this
+
+                        val withoutPrefix = prefix(name)?.let { prefix ->
+                            name.replace(prefix, "")
+                        } ?: name
+
+                        val withoutCharSequence = untilFirstNumSequence(withoutPrefix)?.let { subStr ->
+                            withoutPrefix.replace(subStr, " ")
+                        } ?: withoutPrefix
+
+                        splitCamelCased(withoutCharSequence).joinToString(" ").trim()
+                    }
+
+                    val result = if (file.isDirectory) {
+                        "- $title" + "\n" + go(file, depth + 1)
+                    } else {
+                        val link = file.relativeTo(sourcesRoot).toString().replace("kt", "md")
+                        "- [$title]($link)"
+                    }
+                    result.prependIndent(indent)
+                }.joinToString("\n")
         }
 
-        return go(sourcesRoot, 0)
+        return go(sourcesRoot, 0).removeBlankLines()
     }
 
 

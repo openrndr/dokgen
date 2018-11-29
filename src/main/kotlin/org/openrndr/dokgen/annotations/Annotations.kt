@@ -1,9 +1,10 @@
 package org.openrndr.dokgen.annotations
 
 
-@Target(AnnotationTarget.EXPRESSION)
+@Target(AnnotationTarget.EXPRESSION, AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.SOURCE)
 annotation class Application
+
 
 @Target(
     AnnotationTarget.EXPRESSION,

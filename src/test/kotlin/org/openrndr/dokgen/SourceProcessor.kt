@@ -7,7 +7,7 @@ import java.io.File
 import kotlin.test.assertEquals
 
 fun testData(p: String): String {
-    return File("src/test/resources/test-data", p).readText()
+    return File("src/test/resources/test-data/SourceProcessor", p).readText()
 }
 
 fun String.removeBlankLines(): String {
@@ -120,6 +120,23 @@ object SourceProcessorSpec : Spek({
                 assertEquals(expected.removeBlankLines(), result.appSources[0].trim().removeBlankLines())
             }
         }
+
+        describe("can be used together with another annotation") {
+            val src = testData("@Application/Input5.kt")
+            val expectedDoc = testData("@Application/Expected5-Doc.md")
+            val expectedApp = testData("@Application/Expected5-App.kt")
+            val result =
+                SourceProcessor.process(
+                    src,
+                    "test"
+                )
+            it("exports app source") {
+                assertEquals(expectedApp.removeBlankLines(), result.appSources[0].removeBlankLines())
+            }
+            it("exports code doc") {
+                assertEquals(expectedDoc.removeBlankLines(), result.doc.removeBlankLines())
+            }
+        }
     }
 
 
@@ -159,6 +176,18 @@ object SourceProcessorSpec : Spek({
                 assertEquals(listOf("image.png", "video.mp4"), result.media)
             }
         }
+    }
 
+    // TODO this needs all the cases
+    describe("full qualified annotation references") {
+        val src = testData("FullyQualified/Input.kt")
+        val expected = testData("FullyQualified/Expected.md")
+        val result = SourceProcessor.process(
+            src,
+            "test"
+        )
+        it("should work") {
+            assertEquals(expected.trim().removeBlankLines(), result.doc.trim().removeBlankLines())
+        }
     }
 })
