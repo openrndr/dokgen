@@ -3,6 +3,7 @@ package org.openrndr.dokgen
 import org.openrndr.dokgen.sourceprocessor.SourceProcessor
 import java.io.File
 import java.nio.file.Path
+import java.util.*
 
 fun File.relativeDir(file: File): Path {
     return toPath().relativize(file.toPath()).parent ?: File("").toPath()
@@ -83,12 +84,20 @@ object DokGen {
 
         fun go(root: File, depth: Int): String {
             val indent = List(depth) { "  " }.joinToString("")
-            return root.listFiles()
+            val files = root.listFiles()
+            val properties = files.find { it.name.endsWith("properties") }?.let {
+                val props = Properties()
+                props.load(it.inputStream())
+                props.stringPropertyNames().associate {
+                    it to props.getProperty(it)
+                }
+            }
+            return files.filter { !it.name.endsWith("properties") }
                 .sortedBy {
                     untilFirstNumSequence(it.name) ?: it.name
                 }.map { file ->
-
-                    val title = file.nameWithoutExtension.run {
+                    val maybeTitleFromProperties = properties?.let { it[file.nameWithoutExtension] }
+                    val title = maybeTitleFromProperties ?: file.nameWithoutExtension.run {
                         val name = this
 
                         val withoutPrefix = prefix(name)?.let { prefix ->

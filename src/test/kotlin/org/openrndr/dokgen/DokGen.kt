@@ -66,15 +66,13 @@ object DokGenSpek : Spek(
                 |- Chapter One
                 |  - Sub Chapter One
                 |      - [Deeply Nested Article](01_ChapterOne/01_SubChapterOne/DeeplyNestedArticle.md)
-                |  - Sub Chapter Two
+                |  - Sub Chapter 2
                 |  - [Article Non Prefixed](01_ChapterOne/ArticleNonPrefixed.md)
                 |  - [Article Foo Bar](01_ChapterOne/C001ArticleFooBar.md)
-                |  - [Article Baz Qux](01_ChapterOne/C002ArticleBazQux.md)
+                |  - [Article ${'$'} Baz ? Qux !!!](01_ChapterOne/C002ArticleBazQux.md)
                 |- Chapter Two
                 |- Chapter Three
                 """.trimMargin()
-
-                println(result)
 
                 assertEquals(expected, result)
             }
