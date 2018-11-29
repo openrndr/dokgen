@@ -141,6 +141,7 @@ open class DocsifyTask @Inject constructor() : DefaultTask() {
             spec.from(jar)
             spec.into(dokgenBuildDir)
             spec.include("docsify/**/*")
+            spec.exclude("docsify/node_modules/")
         }
 
         project.copy { spec ->

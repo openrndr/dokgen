@@ -4,6 +4,7 @@ import kastree.ast.MutableVisitor
 import kastree.ast.Node
 import kastree.ast.Visitor
 import kastree.ast.Writer
+import kastree.ast.psi.Converter
 import kastree.ast.psi.Parser
 import org.openrndr.dokgen.Doc
 
@@ -34,7 +35,8 @@ object SourceProcessor {
         val doc = Doc()
         val applications = mutableListOf<AppModel>()
 
-        val ast = Parser.parseFile(source)
+        val extrasMap = Converter.WithExtras()
+        val ast = Parser(extrasMap).parseFile(source)
 
 
         val astWithoutExcluded = MutableVisitor.postVisit(ast) { v, parent ->
@@ -74,14 +76,13 @@ object SourceProcessor {
                         val modsWithoutAnnotations = v.mods.filter { it !is Node.Modifier.AnnotationSet }
                         val annotation = v.anns.first().anns.first()
                         val annotationName = annotation.names.joinToString(".").normalizeAnnotation()
-                        println(annotationName)
                         when (annotationName) {
                             "Code" -> {
                                 val field = v.javaClass.getDeclaredField("mods")
                                 field.isAccessible = true
                                 field.set(v, modsWithoutAnnotations)
                                 field.isAccessible = false
-                                val codeText = Writer.write(v)
+                                val codeText = Writer.write(v, extrasMap)
                                 doc.elements.add(
                                     Doc.Element.Code(codeText)
                                 )
@@ -117,7 +118,7 @@ object SourceProcessor {
                             }
                             "Code" -> {
                                 val codeWithoutAnnotations = v.copy(anns = emptyList())
-                                val codeText = Writer.write(codeWithoutAnnotations)
+                                val codeText = Writer.write(codeWithoutAnnotations, extrasMap)
                                 doc.elements.add(
                                     Doc.Element.Code(codeText)
                                 )
@@ -125,7 +126,6 @@ object SourceProcessor {
                                 mkLink?.let {
                                     if (appCount != -1) {
                                         val link = mkLink(appCount)
-                                        println("made link: $link")
                                         doc.elements.add(
                                             Doc.Element.Markdown("""
                                                 [Link to the full example]($link)
@@ -138,7 +138,7 @@ object SourceProcessor {
                                 val call = v.expr
                                 if (call is Node.Expr.Call && (call.expr as Node.Expr.Name).name == "run") {
                                     val codeText = call.lambda!!.func.block!!.stmts.map { e ->
-                                        Writer.write(e)
+                                        Writer.write(e, extrasMap)
                                     }.joinToString("\n")
                                     doc.elements.add(
                                         Doc.Element.Code(codeText)
@@ -147,7 +147,6 @@ object SourceProcessor {
                                     mkLink?.let {
                                         if (appCount != -1) {
                                             val link = mkLink(appCount)
-                                            println("made link: $link")
                                             doc.elements.add(
                                                 Doc.Element.Markdown("""
                                                 [Link to the full example]($link)
@@ -186,7 +185,7 @@ object SourceProcessor {
                     val withoutAnns = v.copy(anns = emptyList())
                     val annotationName = annotation.names.first().normalizeAnnotation()
                     if (annotationName == "Application") {
-                        val codeTxt = Writer.write(withoutAnns)
+                        val codeTxt = Writer.write(withoutAnns, extrasMap)
                         applications.add(
                             AppModel(
                                 body = codeTxt
@@ -221,7 +220,7 @@ object SourceProcessor {
                     if (!v.names.contains("annotations")) {
                         applications.forEach {
                             it.imports.add(
-                                Writer.write(v)
+                                Writer.write(v, extrasMap)
                             )
                         }
                     }

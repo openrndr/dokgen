@@ -67,10 +67,11 @@ object DokGenSpek : Spek(
                 |  - Sub Chapter One
                 |      - [Deeply Nested Article](01_ChapterOne/01_SubChapterOne/DeeplyNestedArticle.md)
                 |  - Sub Chapter 2
+                |  - [Article Mark Down](01_ChapterOne/ArticleMarkDown.md)
                 |  - [Article Non Prefixed](01_ChapterOne/ArticleNonPrefixed.md)
                 |  - [Article Foo Bar](01_ChapterOne/C001ArticleFooBar.md)
                 |  - [Article ${'$'} Baz ? Qux !!!](01_ChapterOne/C002ArticleBazQux.md)
-                |- Chapter Two
+                |- Chapter Two Snake Cased
                 |- Chapter Three
                 """.trimMargin()
 

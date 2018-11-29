@@ -108,7 +108,7 @@ object DokGen {
                             withoutPrefix.replace(subStr, " ")
                         } ?: withoutPrefix
 
-                        splitCamelCased(withoutCharSequence).joinToString(" ").trim()
+                        splitCamelCased(withoutCharSequence).joinToString(" ").replace("_", " ").trim()
                     }
 
                     val result = if (file.isDirectory) {
@@ -135,46 +135,52 @@ object DokGen {
 
 
         sourceFiles.forEach { file ->
-            println("processing $file")
-            val packageDirective =
-                determinePackageDirective(
-                    sourcesRoot,
-                    file
-                )
 
-
+            val ext = file.extension
             val srcFileName = file.nameWithoutExtension
             val relativeDir = sourcesRoot.relativeDir(file).toString()
+            val docsOutDir = File(mdOutputDir, relativeDir)
+            val mdTarget = File(docsOutDir, "$srcFileName.md")
+            docsOutDir.mkdirs()
+
+            when (ext) {
+                "md" -> {
+                    file.copyTo(mdTarget, overwrite = true)
+                }
+                "kt" -> {
+                    val packageDirective =
+                        determinePackageDirective(
+                            sourcesRoot,
+                            file
+                        )
+
+                    val mkLink = webRootUrl?.let { it ->
+                        { index: Int ->
+                            val paddedIndex = "$index".padStart(3, '0')
+                            "$it/examples/$relativeDir/$srcFileName$paddedIndex.kt"
+                        }
+                    }
+
+                    val fileContents = file.readText()
+                    val result = SourceProcessor.process(
+                        fileContents,
+                        packageDirective = packageDirective,
+                        mkLink = mkLink
+                    )
+
+                    mdTarget.writeText(result.doc)
 
 
-            val mkLink = webRootUrl?.let { it ->
-                { index: Int ->
-                    val paddedIndex = "$index".padStart(3, '0')
-                    "$it/examples/$relativeDir/$srcFileName$paddedIndex.kt"
+                    val samplesOutDir = File(examplesOutputDir, relativeDir)
+                    samplesOutDir.mkdirs()
+                    result.appSources.forEachIndexed { index, s ->
+                        val paddedIndex = "$index".padStart(3, '0')
+                        val sampleOutFile = File(samplesOutDir, "$srcFileName$paddedIndex.kt")
+                        sampleOutFile.writeText(s)
+                    }
                 }
             }
 
-            val fileContents = file.readText()
-            val result = SourceProcessor.process(
-                fileContents,
-                packageDirective = packageDirective,
-                mkLink = mkLink
-            )
-
-            val docsOutDir = File(mdOutputDir, relativeDir)
-            docsOutDir.mkdirs()
-
-            val md = File(docsOutDir, "$srcFileName.md")
-            md.writeText(result.doc)
-
-
-            val samplesOutDir = File(examplesOutputDir, relativeDir)
-            samplesOutDir.mkdirs()
-            result.appSources.forEachIndexed { index, s ->
-                val paddedIndex = "$index".padStart(3, '0')
-                val sampleOutFile = File(samplesOutDir, "$srcFileName$paddedIndex.kt")
-                sampleOutFile.writeText(s)
-            }
         }
         val index = generateIndex(sourcesRoot)
         File(mdOutputDir, "_sidebar.md").writeText(index)
