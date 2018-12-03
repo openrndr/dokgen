@@ -14,6 +14,10 @@ const val PLUGIN_NAME = "dokgen"
 
 class DokGenException(message: String) : Exception("$PLUGIN_NAME exception: $message")
 
+fun generatedExamplesDirectory(project: Project): File {
+    return File(project.projectDir, "src/generated/examples")
+}
+
 
 // this class provides the configuration dsl
 // the inner classes represent configurable data
@@ -59,7 +63,7 @@ open class ProcessSourcesTask @Inject constructor(val examplesConf: DokGenPlugin
     var mdOutputDir: File = File(project.buildDir, "$PLUGIN_NAME/md")
 
     @OutputDirectory
-    var examplesOutputDir: File = File(project.projectDir, "src/main/kotlin/examples")
+    var examplesOutputDir: File = generatedExamplesDirectory(project)
 
 
     @TaskAction
@@ -87,7 +91,7 @@ open class RunExamplesTask @Inject constructor(
     }
 
     @InputDirectory
-    var examplesDirectory: File = File(project.projectDir, "src/main/kotlin/examples")
+    var examplesDirectory: File = generatedExamplesDirectory(project)
 
     @TaskAction
     fun run(inputs: IncrementalTaskInputs) {
@@ -100,7 +104,7 @@ open class RunExamplesTask @Inject constructor(
         val sourceSetContainer = project.property("sourceSets") as SourceSetContainer
         val ss = sourceSetContainer.getByName("main")
 
-        val execClasses = DokGen.getExampleClasses(toRun, File(project.projectDir, "src/main/kotlin/examples"))
+        val execClasses = DokGen.getExampleClasses(toRun, examplesDirectory)
 
         execClasses.forEach { klass ->
             try {
@@ -175,7 +179,6 @@ open class ServeDocsTask @Inject constructor() : DefaultTask() {
     }
 }
 
-
 class GradlePlugin : Plugin<Project> {
     override fun apply(project: Project) {
         val conf = project.extensions.create(PLUGIN_NAME,
@@ -183,12 +186,14 @@ class GradlePlugin : Plugin<Project> {
             project.objects
         )
 
-//        val sourceSets = project.property("sourceSets") as SourceSetContainer
-//        sourceSets.create("doks") { conf ->
-//            conf.allSource.srcDir("${project.projectDir}/doks")
-//        }
+
 
         project.afterEvaluate { loaded ->
+            val sourceSets = project.property("sourceSets") as SourceSetContainer
+            val ms = sourceSets.getByName("main")
+            generatedExamplesDirectory(project).let {
+                ms.java.srcDir(it)
+            }
 
             val dokGenTask = project.tasks.create(PLUGIN_NAME)
             dokGenTask.group = PLUGIN_NAME
