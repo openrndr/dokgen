@@ -17,15 +17,32 @@ fun String.removeBlankLines(): String {
 object SourceProcessorSpec : Spek({
 
     describe("@Text") {
-        val src = testData("@Text/Input.kt")
-        val expected = testData("@Text/Expected.md")
-        val result =
-            SourceProcessor.process(
-                src,
-                "test"
-            )
-        it("returns the text itself") {
-            assertEquals(expected, result.doc.trim())
+
+        describe("simple") {
+            val src = testData("@Text/Input.kt")
+            val expected = testData("@Text/Expected.md")
+            val result =
+                SourceProcessor.process(
+                    src,
+                    "test"
+                )
+            it("returns the text itself") {
+                assertEquals(expected.trim(), result.doc.trim())
+            }
+        }
+
+
+        describe("given interpolated text"){
+            val src = testData("@Text/Input2.kt")
+            val expected = testData("@Text/Expected2.md")
+            val result =
+                SourceProcessor.process(
+                    src,
+                    "test"
+                )
+            it("does not choke on it"){
+                assertEquals(expected.trim(), result.doc.trim())
+            }
         }
     }
 

@@ -7,10 +7,10 @@ fun stringExpr(expr: Node.Expr): String {
     when (expr) {
         is Node.Expr.StringTmpl -> {
             return expr.elems.map {
-                if (it is Node.Expr.StringTmpl.Elem.Regular) {
-                    it.str
-                } else {
-                    throw RuntimeException("unexpected string type: $it")
+                when (it) {
+                    is Node.Expr.StringTmpl.Elem.Regular -> it.str
+                    is Node.Expr.StringTmpl.Elem.ShortTmpl -> "$${it.str}"
+                    else -> throw RuntimeException("unexpected string type: $it")
                 }
             }.joinToString("")
         }
