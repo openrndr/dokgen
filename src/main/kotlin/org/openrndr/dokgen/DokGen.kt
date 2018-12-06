@@ -80,9 +80,11 @@ object DokGen {
     }
 
 
+    // traverses the file tree under sourcesRoot transforming it into a markdown representation
+    // that is suitable to use as a description of the sidebar in docsify
     fun generateIndex(sourcesRoot: File): String {
 
-        fun go(root: File, depth: Int): String {
+        fun go(root: File, depth: Int = 0): String {
             val indent = List(depth) { "  " }.joinToString("")
             val files = root.listFiles()
             val properties = files.find { it.name.endsWith("properties") }?.let {
@@ -111,17 +113,17 @@ object DokGen {
                         splitCamelCased(withoutCharSequence).joinToString(" ").replace("_", " ").trim()
                     }
 
-                    val result = if (file.isDirectory) {
+                    // result
+                    if (file.isDirectory) {
                         "- $title" + "\n" + go(file, depth + 1)
                     } else {
                         val link = file.relativeTo(sourcesRoot).toString().replace("kt", "md")
                         "- [$title]($link)"
-                    }
-                    result.prependIndent(indent)
+                    }.prependIndent(indent)
                 }.joinToString("\n")
         }
 
-        return go(sourcesRoot, 0).removeBlankLines()
+        return go(sourcesRoot).removeBlankLines()
     }
 
 
@@ -186,7 +188,7 @@ object DokGen {
         File(mdOutputDir, "_sidebar.md").writeText(index)
     }
 
-    fun getExampleClasses(sourceFiles: List<File>, sourcesRoot: File): List<String> {
+    fun getExamplesClassNames(sourceFiles: List<File>, sourcesRoot: File): List<String> {
         return sourceFiles.filter {
             it.extension == "kt"
         }.map { file ->

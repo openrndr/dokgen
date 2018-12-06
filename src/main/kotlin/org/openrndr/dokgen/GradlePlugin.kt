@@ -104,7 +104,7 @@ open class RunExamplesTask @Inject constructor(
         val sourceSetContainer = project.property("sourceSets") as SourceSetContainer
         val ss = sourceSetContainer.getByName("main")
 
-        val execClasses = DokGen.getExampleClasses(toRun, examplesDirectory)
+        val execClasses = DokGen.getExamplesClassNames(toRun, examplesDirectory)
 
         execClasses.forEach { klass ->
             try {

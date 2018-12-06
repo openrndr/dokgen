@@ -17,7 +17,6 @@ fun String.removeBlankLines(): String {
 object SourceProcessorSpec : Spek({
 
     describe("@Text") {
-
         describe("simple") {
             val src = testData("@Text/Input.kt")
             val expected = testData("@Text/Expected.md")
@@ -32,7 +31,7 @@ object SourceProcessorSpec : Spek({
         }
 
 
-        describe("given interpolated text"){
+        describe("given interpolated text") {
             val src = testData("@Text/Input2.kt")
             val expected = testData("@Text/Expected2.md")
             val result =
@@ -40,7 +39,7 @@ object SourceProcessorSpec : Spek({
                     src,
                     "test"
                 )
-            it("does not choke on it"){
+            it("does not choke on it") {
                 assertEquals(expected.trim(), result.doc.trim())
             }
         }
@@ -55,7 +54,7 @@ object SourceProcessorSpec : Spek({
                     src,
                     "test"
                 )
-            it("returns text embedded in a markdownConf code block") {
+            it("returns text embedded in a markdown code block") {
                 assertEquals(expected, result.doc.trim())
             }
         }
@@ -97,6 +96,7 @@ object SourceProcessorSpec : Spek({
                     "test"
                 )
             it("copies imports, adds package directive and embeds annotated target in main method") {
+                println(result.appSources[0])
                 assertEquals(expected, result.appSources[0].trim())
             }
         }

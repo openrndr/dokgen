@@ -1,7 +1,5 @@
 package org.openrndr.dokgen.sourceprocessor
 
-import org.openrndr.dokgen.Doc
-
 fun appTemplate(pkg: String, imports: List<String>, body: String): String {
     return """
 package $pkg
@@ -29,6 +27,8 @@ fun renderDoc(doc: Doc, title: String? = null): String {
             }
             is Doc.Element.Media.Image -> {
                 //"![${el.src.trim()}](${el.src.trim()})"
+                // docsify tries to be smart and does some magic to the links which breaks them
+                // so rendering directly into an html img tag instead of markdown
                 """
                |<img src="${el.src.trim()}"/>
                 """.trimMargin()
