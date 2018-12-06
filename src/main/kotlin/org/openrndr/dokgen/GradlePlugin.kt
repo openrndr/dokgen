@@ -1,18 +1,23 @@
 package org.openrndr.dokgen
 
+import org.codehaus.groovy.runtime.GStringImpl
 import org.gradle.api.Action
 import org.gradle.api.DefaultTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.file.CopySpec
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.*
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs
 import java.io.File
 import javax.inject.Inject
+import org.gradle.api.tasks.Copy
+import org.gradle.internal.impldep.bsh.commands.dir
 
 const val PLUGIN_NAME = "dokgen"
 
 class DokGenException(message: String) : Exception("$PLUGIN_NAME exception: $message")
+
 
 fun generatedExamplesDirectory(project: Project): File {
     return File(project.projectDir, "src/generated/examples")
@@ -31,8 +36,14 @@ open class DokGenPluginExtension @Inject constructor(objectFactory: ObjectFactor
         var jvmArgs = mutableListOf<String>()
     }
 
+    open class DocsifyConf {
+        var assets: List<File>? = null
+        var media: List<File>? = null
+    }
+
     var examplesConf: ExamplesConf? = objectFactory.newInstance(ExamplesConf::class.java)
     var runnerConf: RunnerConf? = objectFactory.newInstance(RunnerConf::class.java)
+    var docsifyConf: DocsifyConf? = objectFactory.newInstance(DocsifyConf::class.java)
 
 
     fun runner(action: Action<RunnerConf>) {
@@ -43,6 +54,12 @@ open class DokGenPluginExtension @Inject constructor(objectFactory: ObjectFactor
 
     fun examples(action: Action<ExamplesConf>) {
         examplesConf?.let {
+            action.execute(it)
+        }
+    }
+
+    fun docsify(action: Action<DocsifyConf>) {
+        docsifyConf?.let {
             action.execute(it)
         }
     }
@@ -123,7 +140,9 @@ open class RunExamplesTask @Inject constructor(
     }
 }
 
-open class DocsifyTask @Inject constructor() : DefaultTask() {
+open class DocsifyTask @Inject constructor(
+    private val docsifyConf: DokGenPluginExtension.DocsifyConf?
+) : DefaultTask() {
     init {
         group = "dokgen"
         description = "docsify"
@@ -134,9 +153,8 @@ open class DocsifyTask @Inject constructor() : DefaultTask() {
     val dokgenMdDir = File(dokgenBuildDir, "md")
     val docsifyBuildDir = File(project.buildDir, "$PLUGIN_NAME/docsify")
     var docsifyDocsDir: File = File(docsifyBuildDir, "docs")
-    var mediaInputDirectory: File = File(project.projectDir, "media")
     var mediaOutputDirectory: File = File(docsifyDocsDir, "media")
-
+    var assetsOutputDirectory: File = File(docsifyDocsDir, "assets")
 
     @TaskAction
     fun run() {
@@ -148,9 +166,19 @@ open class DocsifyTask @Inject constructor() : DefaultTask() {
             spec.exclude("docsify/node_modules/")
         }
 
-        project.copy { spec ->
-            spec.from(mediaInputDirectory)
-            spec.into(mediaOutputDirectory)
+        docsifyConf?.let {
+            it.media?.let { media ->
+                project.copy { spec ->
+                    spec.from(media)
+                    spec.into(mediaOutputDirectory)
+                }
+            }
+            it.assets?.let { assets ->
+                project.copy { spec ->
+                    spec.from(assets)
+                    spec.into(assetsOutputDirectory)
+                }
+            }
         }
 
         project.copy { spec ->
@@ -188,7 +216,7 @@ class GradlePlugin : Plugin<Project> {
 
 
 
-        project.afterEvaluate { loaded ->
+        project.afterEvaluate { _ ->
             val sourceSets = project.property("sourceSets") as SourceSetContainer
             val ms = sourceSets.getByName("main")
             generatedExamplesDirectory(project).let {
@@ -211,7 +239,7 @@ class GradlePlugin : Plugin<Project> {
             dokGenTask.dependsOn(processSources.path)
             dokGenTask.dependsOn(runExamples.path)
 
-            val docsifyTask = project.tasks.create("docsify", DocsifyTask::class.java)
+            val docsifyTask = project.tasks.create("docsify", DocsifyTask::class.java, conf.docsifyConf)
             dokGenTask.finalizedBy(docsifyTask)
 
             docsifyTask.dependsOn(dokGenTask)
