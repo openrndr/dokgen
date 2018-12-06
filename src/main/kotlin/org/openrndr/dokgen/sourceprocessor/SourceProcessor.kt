@@ -198,7 +198,7 @@ private class ProcessAnnotatedNode(
                     doc.add(Doc.Element.Code(text)).let { doc ->
                         Pair(maybeMkLink, state.inApplication).map2 { mkLink, _ ->
                             val appCount = state.applications.size
-                            val link = mkLink(appCount)
+                            val link = mkLink(appCount - 1)
                             doc.add(
                                 Doc.Element.Markdown("""
                                                 [Link to the full example]($link)
