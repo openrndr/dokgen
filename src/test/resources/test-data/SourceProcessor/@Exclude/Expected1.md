@@ -5,3 +5,7 @@ run {
     println("hello world")
 }
 ```
+
+```kotlin
+println("hello world")
+```

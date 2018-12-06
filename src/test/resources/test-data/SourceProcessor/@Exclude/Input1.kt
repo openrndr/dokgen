@@ -20,4 +20,15 @@ fun main(args: Array<String>) {
             println("this should not make it to the doc")
         }
     }
+
+
+    @Code.Block
+    run {
+        println("hello world")
+
+        @Exclude
+        run {
+            println("this should not make it to the doc")
+        }
+    }
 }
