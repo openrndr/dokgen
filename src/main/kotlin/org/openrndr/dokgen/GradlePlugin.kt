@@ -229,19 +229,16 @@ class GradlePlugin : Plugin<Project> {
 
             val compileKotlinTask = project.tasks.getByPath("compileKotlin")
             val processSources = project.tasks.create("processSources", ProcessSourcesTask::class.java, conf.examplesConf)
-            processSources.dependsOn(compileKotlinTask)
-
             val runExamples = project.tasks.create("runExamples", RunExamplesTask::class.java, conf.runnerConf)
 
-            runExamples.dependsOn(processSources.path)
+            runExamples.dependsOn(processSources)
             runExamples.dependsOn(compileKotlinTask)
 
-            dokGenTask.dependsOn(processSources.path)
-            dokGenTask.dependsOn(runExamples.path)
+            dokGenTask.dependsOn(runExamples)
 
             val docsifyTask = project.tasks.create("docsify", DocsifyTask::class.java, conf.docsifyConf)
-            dokGenTask.finalizedBy(docsifyTask)
 
+            dokGenTask.finalizedBy(docsifyTask)
             docsifyTask.dependsOn(dokGenTask)
 
 
