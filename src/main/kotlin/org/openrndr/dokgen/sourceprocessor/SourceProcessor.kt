@@ -215,6 +215,7 @@ private class ProcessAnnotatedNode(
                         }.mapAnnotated {
                             it.withoutAnnotations()
                         }
+
                         printNode(cleaned)
                     }
                     "Code.Block" -> {
