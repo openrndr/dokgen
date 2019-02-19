@@ -175,10 +175,31 @@ open class DocsifyTask @Inject constructor(
             }
             it.assets?.let { assets ->
                 project.copy { spec ->
+                    spec.exclude("CNAME", "index.html")
                     spec.from(assets)
                     spec.into(assetsOutputDirectory)
                 }
+
+                val files = assets.flatMap {
+                    if (it.isDirectory) {
+                        it.listFiles().toList()
+                    } else {
+                        listOf(it)
+                    }
+                }
+
+                listOf("CNAME", "index.html").map { name ->
+                    files.find { it.name.contains(name) }
+                }.filterNotNull().forEach { file ->
+                    println("copying $file")
+                    project.copy { spec ->
+                        spec.from(file)
+                        spec.into(docsifyDocsDir)
+                    }
+                }
+
             }
+
         }
 
         project.copy { spec ->
