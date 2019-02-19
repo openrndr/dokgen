@@ -1,6 +1,4 @@
 # DokGen
-Generate library documentation from annotated Kotlin source code.
-
 DokGen takes kotlin source files such as [this](https://github.com/openrndr/openrndr-guide/blob/dev/src/main/kotlin/docs/04_Drawing_basics/C00_DrawingPrimitives.kt)  and turns it into documentation like [this](https://guide.openrndr.org/#/04_Drawing_basics/C00_DrawingPrimitives).
 The kotlin sources are turned into markdown which are then used to generate a static site using [docsify](https://docsify.js.org/#/).
 Using DokGen, you can take advantage of IDE features like auto-completion and refactoring while writing documentation. Moreover, your docs will always be up to date with your API, because invalid docs will just not compile.
