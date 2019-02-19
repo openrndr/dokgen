@@ -19,6 +19,9 @@ classpath 'com.github.openrndr:dokgen:bdc8d110d4'
 implementation 'com.github.openrndr:dokgen:bdc8d110d4'
 ```
 
+An example repository showing basic usage and setup can be found [here](https://github.com/krksgbr/dokgen-example).
+A more complete setup can be seen in the [OPENRNDR guide](https://github.com/openrndr/openrndr-guide) repo.
+
 
 ## Annotations
 
@@ -156,12 +159,15 @@ dokgen {
     }
 }
 ```
+[Example](https://github.com/krksgbr/dokgen-example/tree/master/docsify-assets)
 
 ## Docsify assets
 Include any of the following files in your docsify assets:
 - `index.html`: override the default one
 - `index.js`:  override the default one
 - `CNAME`: for setting up a [custom subdomain](https://help.github.com/articles/setting-up-a-custom-subdomain/) on GitHub.
+
+[Example](https://github.com/krksgbr/dokgen-example/tree/master/docsify-assets)
 
 ## Publishing
 DokGen doesn't come with a built-in publishing solution.
