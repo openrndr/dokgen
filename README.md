@@ -20,7 +20,7 @@ implementation 'com.github.openrndr:dokgen:bdc8d110d4'
 ```
 
 An example repository showing basic usage and setup can be found [here](https://github.com/krksgbr/dokgen-example).
-A more complete setup can be seen in the [OPENRNDR guide](https://github.com/openrndr/openrndr-guide) repo.
+A more complete setup can be seen in the [OPENRNDR guide](https://github.com/openrndr/openrndr-guide/tree/dev) repo.
 
 
 ## Annotations
