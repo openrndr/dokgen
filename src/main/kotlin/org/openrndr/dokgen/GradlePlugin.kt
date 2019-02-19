@@ -191,7 +191,6 @@ open class DocsifyTask @Inject constructor(
                 listOf("CNAME", "index.html").map { name ->
                     files.find { it.name.contains(name) }
                 }.filterNotNull().forEach { file ->
-                    println("copying $file")
                     project.copy { spec ->
                         spec.from(file)
                         spec.into(docsifyDocsDir)
