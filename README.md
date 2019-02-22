@@ -3,6 +3,7 @@ DokGen is a gradle plugin that takes kotlin source files such as [this](https://
 The kotlin sources are turned into markdown which are then used to generate a static site using [docsify](https://docsify.js.org/#/).
 Using DokGen, you can take advantage of IDE features like auto-completion and refactoring while writing documentation. Moreover, your docs will always be up to date with your API, because invalid docs will just not compile.
 
+Read [this medium article](https://medium.com/openrndr/improving-the-openrndr-guide-f98fba29c393) on how we've improved the [OPENRNDR](https://openrndr.org/) [guide](https://guide.openrndr.org/#/) using DokGen.
 
 
 ## Getting started
