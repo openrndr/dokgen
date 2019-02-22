@@ -31,7 +31,7 @@ A more complete setup can be seen in the [OPENRNDR guide](https://github.com/ope
 
 ### Text
 
-```
+```kotlin
 @Text
 """
 # Some Arbitrary Markdown
@@ -41,7 +41,7 @@ Strings annotated with `@Text` may contain arbitrary markdown. The annotated str
 
 ### Application
 
-```
+```kotlin
 @Application
 run {
   println("Hello World")
@@ -51,7 +51,7 @@ Code annotated with `Application` is wrapped in a `main` function and exported t
 DokGen will run these application examples during the build process to make sure they work.
 
 This will create a file roughly:
-```
+```kotlin
 fun main(args: Array<String>) {
     println("Hello World")
 }
@@ -59,7 +59,7 @@ fun main(args: Array<String>) {
 
 
 ### Code
-```
+```kotlin
 @Code
 fun foo(){
   println("Hello World")
@@ -70,7 +70,7 @@ Use this annotation to show code snippets in the documentation.
 
 ### Code.Block
 
-```
+```kotlin
 @Code.Block
 run {
   println("Hello World")
@@ -78,13 +78,13 @@ run {
 ```
 Use this annotation to include the contents of a run block in the documentation.
 This will produce the following:
-```
+```kotlin
 println("Hello World")
 ```
 
 
 ### Exclude
-```
+```kotlin
 run {
   println("hello")
 
@@ -95,7 +95,7 @@ run {
 ```
 Use this annotation to exclude parts of the code from the documentation.
 This will produce the following:
-```
+```kotlin
 run {
    println("hello")
 }
@@ -103,14 +103,14 @@ run {
 
 
 ### Media.Image
-```
+```kotlin
 @Media.Image "media/myimage.png"
 ```
 Include an image in the documentation.
 
 
 ### Media.Video
-```
+```kotlin
 @Media.Video "media/myvideo.mp4"
 ```
 Include an video in the documentation.
