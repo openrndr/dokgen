@@ -22,7 +22,7 @@ classpath 'com.github.openrndr:dokgen:bdc8d110d4'
 // add DokGen to the top-level dependencies
 implementation 'com.github.openrndr:dokgen:bdc8d110d4'
 ```
-
+Have a look at [this gradle file](https://github.com/krksgbr/dokgen-example/blob/master/build.gradle).
 An example repository showing basic usage and setup can be found [here](https://github.com/krksgbr/dokgen-example).
 A more complete setup can be seen in the [OPENRNDR guide](https://github.com/openrndr/openrndr-guide/tree/dev) repo.
 
