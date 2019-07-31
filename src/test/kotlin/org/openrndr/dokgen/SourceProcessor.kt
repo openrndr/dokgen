@@ -71,6 +71,17 @@ object SourceProcessorSpec : Spek({
                 assertEquals(expected, result.doc.trim())
             }
         }
+
+        describe("call") {
+            val src = testData("@Code/Input3.kt")
+            val expected = testData("@Code/Expected3.md")
+
+            val result = SourceProcessor.process(src, "test")
+            it("works") {
+                assertEquals(expected, result.doc.trim())
+            }
+        }
+
     }
 
     describe("@Exclude") {

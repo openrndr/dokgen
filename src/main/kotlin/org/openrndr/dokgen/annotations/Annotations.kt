@@ -5,14 +5,22 @@ package org.openrndr.dokgen.annotations
 @Retention(AnnotationRetention.SOURCE)
 annotation class Application
 
-
 @Target(
-    AnnotationTarget.EXPRESSION,
-    AnnotationTarget.FUNCTION,
+    AnnotationTarget.CLASS,
+    AnnotationTarget.ANNOTATION_CLASS,
+    AnnotationTarget.TYPE_PARAMETER,
     AnnotationTarget.PROPERTY,
     AnnotationTarget.FIELD,
     AnnotationTarget.LOCAL_VARIABLE,
-    AnnotationTarget.CLASS
+    AnnotationTarget.VALUE_PARAMETER,
+    AnnotationTarget.CONSTRUCTOR,
+    AnnotationTarget.FUNCTION,
+    AnnotationTarget.PROPERTY_GETTER,
+    AnnotationTarget.PROPERTY_SETTER,
+    AnnotationTarget.TYPE,
+    AnnotationTarget.EXPRESSION,
+    AnnotationTarget.FILE,
+    AnnotationTarget.TYPEALIAS
 )
 @Retention(AnnotationRetention.SOURCE)
 annotation class Code {
