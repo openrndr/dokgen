@@ -35,8 +35,8 @@ project.ext.spekVersion = "2.0"
 
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-    compile 'com.github.cretz.kastree:ast-jvm:c97c0b7d1f'
-    compile 'com.github.cretz.kastree:ast-psi:c97c0b7d1f'
+    compile 'com.github.edwinRNDR.kastree:ast-jvm:2c7c30404d'
+    compile 'com.github.edwinRNDR.kastree:ast-psi:2c7c30404d'
 
     compile gradleApi()
 
