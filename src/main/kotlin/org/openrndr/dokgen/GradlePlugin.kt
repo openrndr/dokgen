@@ -1,28 +1,27 @@
 package org.openrndr.dokgen
 
-import org.codehaus.groovy.runtime.GStringImpl
+
 import org.gradle.api.Action
 import org.gradle.api.DefaultTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.file.CopySpec
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.*
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs
 import java.io.File
 import javax.inject.Inject
-import org.gradle.api.tasks.Copy
-import org.gradle.internal.impldep.bsh.commands.dir
 
 const val PLUGIN_NAME = "dokgen"
 
 class DokGenException(message: String) : Exception("$PLUGIN_NAME exception: $message")
 
-
 fun generatedExamplesDirectory(project: Project): File {
     return File(project.projectDir, "src/generated/examples")
 }
 
+fun generatedExamplesForExportDirectory(project: Project): File {
+    return File(project.projectDir, "src/generated/examples-export")
+}
 
 // this class provides the configuration dsl
 // the inner classes represent configurable data
@@ -63,7 +62,6 @@ open class DokGenPluginExtension @Inject constructor(objectFactory: ObjectFactor
             action.execute(it)
         }
     }
-
 }
 
 open class ProcessSourcesTask @Inject constructor(val examplesConf: DokGenPluginExtension.ExamplesConf?) : DefaultTask() {
@@ -82,6 +80,9 @@ open class ProcessSourcesTask @Inject constructor(val examplesConf: DokGenPlugin
     @OutputDirectory
     var examplesOutputDir: File = generatedExamplesDirectory(project)
 
+    @OutputDirectory
+    var examplesForExportOutputDir: File = generatedExamplesForExportDirectory(project)
+
 
     @TaskAction
     fun run(inputs: IncrementalTaskInputs) {
@@ -94,6 +95,7 @@ open class ProcessSourcesTask @Inject constructor(val examplesConf: DokGenPlugin
             sourcesDir,
             mdOutputDir,
             examplesOutputDir,
+            examplesForExportOutputDir,
             webRootUrl = examplesConf?.webRootUrl
         )
     }
@@ -117,10 +119,8 @@ open class RunExamplesTask @Inject constructor(
             toRun.add(it.file)
         }
 
-
         val sourceSetContainer = project.property("sourceSets") as SourceSetContainer
         val ss = sourceSetContainer.getByName("main")
-
         val execClasses = DokGen.getExamplesClassNames(toRun, examplesDirectory)
 
         execClasses.forEach { klass ->
@@ -136,7 +136,6 @@ open class RunExamplesTask @Inject constructor(
                 e.printStackTrace()
             }
         }
-
     }
 }
 
@@ -234,8 +233,6 @@ class GradlePlugin : Plugin<Project> {
             project.objects
         )
 
-
-
         project.afterEvaluate { _ ->
             val sourceSets = project.property("sourceSets") as SourceSetContainer
             val ms = sourceSets.getByName("main")
@@ -260,7 +257,6 @@ class GradlePlugin : Plugin<Project> {
 
             dokGenTask.finalizedBy(docsifyTask)
             docsifyTask.dependsOn(dokGenTask)
-
 
             val serveDocsTask = project.tasks.create("serveDocs", ServeDocsTask::class.java)
             serveDocsTask.dependsOn(docsifyTask)

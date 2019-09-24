@@ -75,6 +75,9 @@ object DokGenSpek : Spek(
                 |- Chapter Three
                 """.trimMargin()
 
+                println(result)
+                println("--")
+                println(expected)
                 assertEquals(expected, result)
             }
         }

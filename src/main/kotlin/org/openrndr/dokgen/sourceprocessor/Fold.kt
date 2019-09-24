@@ -8,7 +8,7 @@ interface Folder<A> {
     val post: ((A, Node) -> A)?
 }
 
-fun <A> mkFoldFn(acc: A, folder: Folder<A>): (Iterable<Node?>) -> A {
+fun <A> makeFoldFunction(acc: A, folder: Folder<A>): (Iterable<Node?>) -> A {
     return { nodes ->
         nodes.filterNotNull()
             .fold(acc) { _acc, node ->
@@ -17,14 +17,12 @@ fun <A> mkFoldFn(acc: A, folder: Folder<A>): (Iterable<Node?>) -> A {
     }
 }
 
-
 fun <A> Iterable<Node?>.fold(acc: A, folder: Folder<A>): A =
-    mkFoldFn(acc, folder)(this)
-
+    makeFoldFunction(acc, folder)(this)
 
 fun <A> Node.fold(acc: A, folder: Folder<A>): A {
     val newAcc = folder.pre(acc, this)
-    val foldNodes = mkFoldFn(newAcc, folder)
+    val foldNodes = makeFoldFunction(newAcc, folder)
     val result = when (this) {
         is Node.File -> {
             foldNodes((anns + pkg + imports + decls))

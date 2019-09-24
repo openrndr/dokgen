@@ -41,7 +41,8 @@ fun renderDoc(doc: Doc, title: String? = null): String {
                 |""".trimMargin()
             }
         }
-        acc + "\n" + str + "\n"
+        "$acc \n $str \n"
+        //acc + "\n" + str + "\n"
     }
     return title?.let {
         "# $title\n$strDoc"

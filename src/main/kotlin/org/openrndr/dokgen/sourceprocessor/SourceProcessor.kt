@@ -10,16 +10,20 @@ import java.lang.IllegalStateException
 
 // the state of folding the syntax tree
 private data class State(
-    val doc: Doc = Doc(),
-    val applications: List<String> = listOf(),
-    val imports: List<String> = listOf(),
-    val inApplication: InApplication? = null
+        val doc: Doc = Doc(),
+        val applications: List<String> = listOf(),
+        val applicationsForExport: List<String> = listOf(),
+        val imports: List<String> = listOf(),
+        val inApplication: InApplication? = null
 ) {
     data class InApplication(val node: Node)
 
-
     fun addApplication(text: String): State {
         return copy(applications = applications + text)
+    }
+
+    fun addApplicationForExport(text: String): State {
+        return copy(applicationsForExport = applicationsForExport + text)
     }
 
     fun addImport(import: String): State {
@@ -38,7 +42,6 @@ val garbage =
     Node.Expr.StringTmpl(elems = listOf(
         Node.Expr.StringTmpl.Elem.Regular("GARBAGE")
     ), raw = true)
-
 
 private fun String.removeGarbage(): String {
     return this.split("\n").filter { !it.contains("GARBAGE") }.joinToString("\n")
@@ -152,9 +155,7 @@ private class ProcessAnnotatedNode(
         val annotation = node.anns.firstOrNull()?.anns?.firstOrNull() ?: return state
         val annotationName = annotation.getName()
         return when (annotationName) {
-
             "Application" -> {
-
                 val appSource = node.withoutAnnotations().run {
                     filterAnnotated { node ->
                         val annotated = node.anns.firstOrNull()?.anns?.firstOrNull()?.names?.firstOrNull()
@@ -167,11 +168,29 @@ private class ProcessAnnotatedNode(
                     }
                 }.run(printNode)
 
+                /*
+                Generate the source for export here. These are slightly different from the sources that are used
+                for running the applications, notably the parts with exclude annotations are excluded.
+                 */
+                val appSourceForExport = node.withoutAnnotations().run {
+                    filterAnnotated { node ->
+                        val annotated = node.anns.firstOrNull()?.anns?.firstOrNull()?.names?.firstOrNull()
+
+                        when (annotated) {
+                            "Exclude", "Text", "Media" ->  false
+                            else -> true
+                        }
+                    }.mapAnnotated { node ->
+                        node.withoutAnnotations()
+                    }
+                }.run(printNode)
+
+
+                println(appSourceForExport)
+
                 val newState = state.copy(
                     inApplication = State.InApplication(node)
-                ).addApplication(
-                    appSource
-                )
+                ).addApplication(appSource).addApplicationForExport(appSourceForExport)
 
                 val nextAnnotations = if (node.anns.size > 1) {
                     node.anns.subList(1, node.anns.size)
@@ -186,13 +205,11 @@ private class ProcessAnnotatedNode(
                     )
                 } ?: newState
             }
-
             "Text" -> {
                 val text = stringExpr(node.expr)
                 val newDoc = doc.add(Doc.Element.Markdown(text))
                 state.updateDoc(newDoc)
             }
-
             "Code", "Code.Block" -> {
                 val mkDoc = { text: String ->
                     doc.add(Doc.Element.Code(text)).let { doc ->
@@ -207,7 +224,6 @@ private class ProcessAnnotatedNode(
                         } ?: doc
                     }
                 }
-
                 val text = when (annotationName) {
                     "Code" -> {
                         val cleaned = node.run {
@@ -215,18 +231,12 @@ private class ProcessAnnotatedNode(
                         }.mapAnnotated {
                             it.withoutAnnotations()
                         }
-
                         printNode(cleaned)
                     }
                     "Code.Block" -> {
-                        val call = node.run {
-                            filterExcluded(this)
-                        }.mapAnnotated {
+                        val call = node.run { filterExcluded(this) }.mapAnnotated {
                             it.withoutAnnotations()
-                        }.run {
-                            this as Node.Expr.Annotated
-                        }.expr
-
+                        }.run { this as Node.Expr.Annotated }.expr
                         if (call is Node.Expr.Call && (call.expr as Node.Expr.Name).name == "run") {
                             call.lambda!!.func.block!!.stmts.map { e ->
                                 printNode(e)
@@ -239,12 +249,9 @@ private class ProcessAnnotatedNode(
                         throw  IllegalStateException()
                     }
                 }
-
                 val newDoc = mkDoc(text)
                 state.updateDoc(newDoc)
             }
-
-
             "Media.Image" -> {
                 val link = stringExpr(node.expr)
                 val newDoc = doc.add(
@@ -259,8 +266,6 @@ private class ProcessAnnotatedNode(
                 )
                 state.updateDoc(newDoc)
             }
-
-
             else -> state
         }
     }
@@ -337,9 +342,9 @@ object SourceProcessor {
     data class Output(
         val doc: String,
         val appSources: List<String>,
+        val appSourcesForExport: List<String>,
         val media: List<String>
     )
-
 
     fun process(
         source: String,
@@ -370,7 +375,15 @@ object SourceProcessor {
             ).removeGarbage()
         }
 
-        val mediaLinks = result.doc.elements.filter { it is Doc.Element.Media }.map { it as Doc.Element.Media }
+        val appSourcesForExport = result.applicationsForExport.map {
+            appTemplate(
+                    packageDirective,
+                    result.imports,
+                    it
+            ).removeGarbage()
+        }
+
+        val mediaLinks = result.doc.elements.filterIsInstance<Doc.Element.Media>().map { it as Doc.Element.Media }
             .map {
                 when (it) {
                     is Doc.Element.Media.Image -> {
@@ -386,6 +399,7 @@ object SourceProcessor {
         return Output(
             doc = renderedDoc,
             appSources = appSources,
+            appSourcesForExport = appSourcesForExport,
             media = mediaLinks
         )
     }

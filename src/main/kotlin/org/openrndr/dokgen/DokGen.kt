@@ -9,7 +9,6 @@ fun File.relativeDir(file: File): Path {
     return toPath().relativize(file.toPath()).parent ?: File("").toPath()
 }
 
-
 object DokGen {
     fun untilFirstNumSequence(string: String): String? {
         val folded = string.fold("") { acc, x ->
@@ -120,24 +119,24 @@ object DokGen {
                         val link = file.relativeTo(sourcesRoot).toString().replace("kt", "md")
                         "- [$title]($link)"
                     }.prependIndent(indent)
-                }.joinToString("\n")
+                }.joinToString("\n").let {
+                        println(it)
+                        it
+                    }
         }
 
         return go(sourcesRoot).removeBlankLines()
     }
-
 
     fun processSources(
         sourceFiles: List<File>,
         sourcesRoot: File,
         mdOutputDir: File,
         examplesOutputDir: File,
+        examplesForExportOutputDir: File,
         webRootUrl: String?
     ) {
-
-
         sourceFiles.forEach { file ->
-
             val ext = file.extension
             val srcFileName = file.nameWithoutExtension
             val relativeDir = sourcesRoot.relativeDir(file).toString()
@@ -156,7 +155,7 @@ object DokGen {
                             file
                         )
 
-                    val mkLink = webRootUrl?.let { it ->
+                    val makeLink = webRootUrl?.let { it ->
                         { index: Int ->
                             val paddedIndex = "$index".padStart(3, '0')
                             "$it/examples/$relativeDir/$srcFileName$paddedIndex.kt"
@@ -167,22 +166,28 @@ object DokGen {
                     val result = SourceProcessor.process(
                         fileContents,
                         packageDirective = packageDirective,
-                        mkLink = mkLink
+                        mkLink = makeLink
                     )
 
                     mdTarget.writeText(result.doc)
 
-
-                    val samplesOutDir = File(examplesOutputDir, relativeDir)
-                    samplesOutDir.mkdirs()
+                    val examplesOutDir = File(examplesOutputDir, relativeDir)
+                    examplesOutDir.mkdirs()
                     result.appSources.forEachIndexed { index, s ->
                         val paddedIndex = "$index".padStart(3, '0')
-                        val sampleOutFile = File(samplesOutDir, "$srcFileName$paddedIndex.kt")
+                        val sampleOutFile = File(examplesOutDir, "$srcFileName$paddedIndex.kt")
+                        sampleOutFile.writeText(s)
+                    }
+
+                    val examplesForExportOutDir = File(examplesForExportOutputDir, relativeDir)
+                    examplesForExportOutDir.mkdirs()
+                    result.appSourcesForExport.forEachIndexed { index, s ->
+                        val paddedIndex = "$index".padStart(3, '0')
+                        val sampleOutFile = File(examplesForExportOutDir, "$srcFileName$paddedIndex.kt")
                         sampleOutFile.writeText(s)
                     }
                 }
             }
-
         }
         val index = generateIndex(sourcesRoot)
         File(mdOutputDir, "_sidebar.md").writeText(index)
