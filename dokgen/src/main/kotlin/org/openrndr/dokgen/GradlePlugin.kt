@@ -5,9 +5,11 @@ import org.gradle.api.Action
 import org.gradle.api.DefaultTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.*
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs
+import org.gradle.work.Incremental
 import org.gradle.work.InputChanges
 import java.io.File
 import javax.inject.Inject
@@ -65,15 +67,18 @@ open class DokGenPluginExtension @Inject constructor(objectFactory: ObjectFactor
     }
 }
 
-open class ProcessSourcesTask @Inject constructor(val examplesConf: DokGenPluginExtension.ExamplesConf?) : DefaultTask() {
-
+abstract class ProcessSourcesTask @Inject constructor(val examplesConf: DokGenPluginExtension.ExamplesConf?) : DefaultTask() {
     init {
         group = PLUGIN_NAME
         description = "processes into markdown and examples"
     }
 
-    @InputDirectory
-    var sourcesDir: File = File(project.projectDir, "src/main/kotlin/docs")
+    @get:Incremental
+    @get:PathSensitive(PathSensitivity.NAME_ONLY)
+    @get:InputDirectory
+    var inputDir: DirectoryProperty = project.objects.directoryProperty().also {
+        it.set(File(project.projectDir, "src/main/kotlin/docs"))
+    }
 
     @OutputDirectory
     var mdOutputDir: File = File(project.buildDir, "$PLUGIN_NAME/md")
@@ -86,14 +91,21 @@ open class ProcessSourcesTask @Inject constructor(val examplesConf: DokGenPlugin
 
 
     @TaskAction
-    fun run(inputs: IncrementalTaskInputs) {
+    fun run(inputChanges: InputChanges) {
+        println(
+                if (inputChanges.isIncremental) "Executing incrementally"
+                else "Executing non-incrementally"
+        )
         val toProcess = mutableListOf<File>()
-        inputs.outOfDate {
-            toProcess.add(it.file)
+        for (change in inputChanges.getFileChanges(inputDir)) {
+            println("${change.changeType}: ${change.normalizedPath}")
+            toProcess.add(change.file)
+
         }
+
         DokGen.processSources(
             toProcess,
-            sourcesDir,
+            inputDir.asFile.get(),
             mdOutputDir,
             examplesOutputDir,
             examplesForExportOutputDir,
@@ -110,22 +122,25 @@ open class RunExamplesTask @Inject constructor(
         description = "run the exported examples programs"
     }
 
-    @InputDirectory
-    var examplesDirectory: File = generatedExamplesDirectory(project)
+    @get:Incremental
+    @get:PathSensitive(PathSensitivity.NAME_ONLY)
+    @get:InputDirectory
+    var examplesDirectory: DirectoryProperty = project.objects.directoryProperty().also {
+        it.set(generatedExamplesDirectory(project))
+    }
 
     @TaskAction
     fun execute(inputChanges: InputChanges) {
         val toRun = mutableListOf<File>()
 
-        //inputChanges.getFileChanges(examplesDirectory)
+        for (change in inputChanges.getFileChanges(examplesDirectory)) {
+            toRun.add(change.file)
+        }
 
-//        inputs.outOfDate {
-//            toRun.add(it.file)
-//        }
 
         val sourceSetContainer = project.property("sourceSets") as SourceSetContainer
         val ss = sourceSetContainer.getByName("main")
-        val execClasses = DokGen.getExamplesClassNames(toRun, examplesDirectory)
+        val execClasses = DokGen.getExamplesClassNames(toRun, examplesDirectory.get().asFile)
 
         execClasses.forEach { klass ->
             try {
@@ -256,7 +271,7 @@ class GradlePlugin : Plugin<Project> {
             runExamples.dependsOn(processSources)
             runExamples.dependsOn(compileKotlinTask)
             runExamples.outputs.upToDateWhen {
-                false
+                true
             }
 
             dokGenTask.dependsOn(runExamples)

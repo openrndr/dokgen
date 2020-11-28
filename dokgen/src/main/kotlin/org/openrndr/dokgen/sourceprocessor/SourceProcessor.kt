@@ -185,9 +185,6 @@ private class ProcessAnnotatedNode(
                     }
                 }.run(printNode)
 
-
-                println(appSourceForExport)
-
                 val newState = state.copy(
                     inApplication = State.InApplication(node)
                 ).addApplication(appSource).addApplicationForExport(appSourceForExport)
@@ -217,7 +214,7 @@ private class ProcessAnnotatedNode(
                             val appCount = state.applications.size
                             val link = mkLink(appCount - 1)
                             doc.add(
-                                Doc.Element.Markdown("""
+                                    Doc.Element.Markdown("""
                                                 [Link to the full example]($link)
                                             """.trimIndent())
                             )
@@ -337,7 +334,6 @@ private class AstFolder(
 
 
 object SourceProcessor {
-
     // what will be produced
     data class Output(
         val doc: String,
@@ -356,6 +352,7 @@ object SourceProcessor {
 
         val extrasMap = Converter.WithExtras()
         val ast = Parser(extrasMap).parseFile(source)
+
         val printNode = { node: Node ->
             Writer.write(node, extrasMap)
         }

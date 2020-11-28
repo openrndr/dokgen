@@ -2,6 +2,7 @@ package org.openrndr.dokgen
 
 import org.openrndr.dokgen.sourceprocessor.SourceProcessor
 import java.io.File
+import java.nio.charset.Charset
 import java.nio.file.Path
 import java.util.*
 
@@ -150,10 +151,10 @@ object DokGen {
                 }
                 "kt" -> {
                     val packageDirective =
-                        determinePackageDirective(
-                            sourcesRoot,
-                            file
-                        )
+                            determinePackageDirective(
+                                    sourcesRoot,
+                                    file
+                            )
 
                     val makeLink = webRootUrl?.let { it ->
                         { index: Int ->
@@ -162,11 +163,12 @@ object DokGen {
                         }
                     }
 
-                    val fileContents = file.readText()
+
+                    val fileContents = file.readText().replace("\r\n","\n")
                     val result = SourceProcessor.process(
-                        fileContents,
-                        packageDirective = packageDirective,
-                        mkLink = makeLink
+                            fileContents,
+                            packageDirective = packageDirective,
+                            mkLink = makeLink
                     )
 
                     mdTarget.writeText(result.doc)
