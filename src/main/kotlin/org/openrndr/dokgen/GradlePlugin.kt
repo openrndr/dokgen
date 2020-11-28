@@ -8,6 +8,7 @@ import org.gradle.api.Project
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.*
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs
+import org.gradle.work.InputChanges
 import java.io.File
 import javax.inject.Inject
 
@@ -113,11 +114,14 @@ open class RunExamplesTask @Inject constructor(
     var examplesDirectory: File = generatedExamplesDirectory(project)
 
     @TaskAction
-    fun run(inputs: IncrementalTaskInputs) {
+    fun execute(inputChanges: InputChanges) {
         val toRun = mutableListOf<File>()
-        inputs.outOfDate {
-            toRun.add(it.file)
-        }
+
+        //inputChanges.getFileChanges(examplesDirectory)
+
+//        inputs.outOfDate {
+//            toRun.add(it.file)
+//        }
 
         val sourceSetContainer = project.property("sourceSets") as SourceSetContainer
         val ss = sourceSetContainer.getByName("main")
@@ -248,8 +252,12 @@ class GradlePlugin : Plugin<Project> {
             val processSources = project.tasks.create("processSources", ProcessSourcesTask::class.java, conf.examplesConf)
             val runExamples = project.tasks.create("runExamples", RunExamplesTask::class.java, conf.runnerConf)
 
+
             runExamples.dependsOn(processSources)
             runExamples.dependsOn(compileKotlinTask)
+            runExamples.outputs.upToDateWhen {
+                false
+            }
 
             dokGenTask.dependsOn(runExamples)
 
