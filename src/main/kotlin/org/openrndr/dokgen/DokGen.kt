@@ -178,6 +178,7 @@ object DokGen {
                     result.appSources.forEachIndexed { index, s ->
                         val paddedIndex = "$index".padStart(3, '0')
                         val sampleOutFile = File(examplesOutDir, "$srcFileName$paddedIndex.kt")
+                        println("writing to $sampleOutFile")
                         sampleOutFile.writeText(s)
                     }
 

@@ -20,11 +20,11 @@ const val PLUGIN_NAME = "dokgen"
 class DokGenException(message: String) : Exception("$PLUGIN_NAME exception: $message")
 
 fun generatedExamplesDirectory(project: Project): File {
-    return File(project.projectDir, "src/generated/examples")
+    return File(project.buildDir, "dokgen/generated/examples")
 }
 
 fun generatedExamplesForExportDirectory(project: Project): File {
-    return File(project.projectDir, "src/generated/examples-export")
+    return File(project.buildDir, "dokgen/generated/examples-export")
 }
 
 // this class provides the configuration dsl
@@ -103,7 +103,6 @@ abstract class ProcessSourcesTask @Inject constructor(
         for (change in inputChanges.getFileChanges(inputDir)) {
             println("${change.changeType}: ${change.normalizedPath}")
             toProcess.add(change.file)
-
         }
 
         DokGen.processSources(
@@ -125,6 +124,7 @@ open class RunExamplesTask @Inject constructor(
         description = "run the exported examples programs"
     }
 
+
     @get:Incremental
     @get:PathSensitive(PathSensitivity.NAME_ONLY)
     @get:InputDirectory
@@ -137,17 +137,20 @@ open class RunExamplesTask @Inject constructor(
         val toRun = mutableListOf<File>()
 
         for (change in inputChanges.getFileChanges(examplesDirectory)) {
+            println("find changes: $change")
             toRun.add(change.file)
         }
 
 
         val sourceSetContainer = project.property("sourceSets") as SourceSetContainer
-        val ss = sourceSetContainer.getByName("main")
+        val ss = sourceSetContainer.getByName("GeneratedExamples")
         val execClasses = DokGen.getExamplesClassNames(toRun, examplesDirectory.get().asFile)
 
         execClasses.forEach { klass ->
             try {
                 project.javaexec { spec ->
+                    println("rcp: ${ss.runtimeClasspath.toList().joinToString(", ")}")
+                    println("ccp: ${ss.compileClasspath.toList().joinToString(", ")}")
                     spec.classpath = ss.runtimeClasspath
                     runnerConf?.let {
                         spec.jvmArgs = it.jvmArgs
@@ -268,19 +271,25 @@ class GradlePlugin : Plugin<Project> {
 
         project.afterEvaluate { _ ->
             val sourceSets = project.property("sourceSets") as SourceSetContainer
-            val ms = sourceSets.getByName("main")
-            generatedExamplesDirectory(project).let {
-                ms.java.srcDir(it)
-            }
+            val mss = sourceSets.getByName("main")
+
+            val gess = sourceSets.create("GeneratedExamples")
+            gess.compileClasspath += mss.compileClasspath
+            gess.runtimeClasspath += mss.runtimeClasspath
+
+            gess.java.srcDir(generatedExamplesDirectory(project))
+
 
             val dokGenTask = project.tasks.create(PLUGIN_NAME)
             dokGenTask.group = PLUGIN_NAME
             dokGenTask.description = "do the work"
 
-            val compileKotlinTask = project.tasks.getByPath("compileKotlin")
+            val compileKotlinTask = project.tasks.getByPath("compileGeneratedExamplesKotlin")
             val processSources = project.tasks.create("processSources", ProcessSourcesTask::class.java, conf.examplesConf)
             val runExamples = project.tasks.create("runExamples", RunExamplesTask::class.java, conf.runnerConf)
 
+            println("compileKotlinTask:")
+            println(compileKotlinTask)
 
             runExamples.dependsOn(processSources)
             runExamples.dependsOn(compileKotlinTask)
