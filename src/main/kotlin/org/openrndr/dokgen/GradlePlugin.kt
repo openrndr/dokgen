@@ -12,6 +12,7 @@ import org.gradle.api.tasks.incremental.IncrementalTaskInputs
 import org.gradle.work.Incremental
 import org.gradle.work.InputChanges
 import java.io.File
+import java.io.Serializable
 import javax.inject.Inject
 
 const val PLUGIN_NAME = "dokgen"
@@ -29,16 +30,16 @@ fun generatedExamplesForExportDirectory(project: Project): File {
 // this class provides the configuration dsl
 // the inner classes represent configurable data
 // the methods represent closures in the dsl through which configuration can be set
-open class DokGenPluginExtension @Inject constructor(objectFactory: ObjectFactory) {
-    open class ExamplesConf {
+open class DokGenPluginExtension @Inject constructor(objectFactory: ObjectFactory):Serializable {
+    open class ExamplesConf: Serializable {
         var webRootUrl: String? = null
     }
 
-    open class RunnerConf {
+    open class RunnerConf: Serializable {
         var jvmArgs = mutableListOf<String>()
     }
 
-    open class DocsifyConf {
+    open class DocsifyConf: Serializable {
         var assets: List<File>? = null
         var media: List<File>? = null
     }
@@ -67,7 +68,9 @@ open class DokGenPluginExtension @Inject constructor(objectFactory: ObjectFactor
     }
 }
 
-abstract class ProcessSourcesTask @Inject constructor(val examplesConf: DokGenPluginExtension.ExamplesConf?) : DefaultTask() {
+abstract class ProcessSourcesTask @Inject constructor(
+    @Input
+    val examplesConf: DokGenPluginExtension.ExamplesConf?) : DefaultTask() {
     init {
         group = PLUGIN_NAME
         description = "processes into markdown and examples"
@@ -76,7 +79,7 @@ abstract class ProcessSourcesTask @Inject constructor(val examplesConf: DokGenPl
     @get:Incremental
     @get:PathSensitive(PathSensitivity.NAME_ONLY)
     @get:InputDirectory
-    var inputDir: DirectoryProperty = project.objects.directoryProperty().also {
+    val inputDir: DirectoryProperty = project.objects.directoryProperty().also {
         it.set(File(project.projectDir, "src/main/kotlin/docs"))
     }
 
@@ -125,7 +128,7 @@ open class RunExamplesTask @Inject constructor(
     @get:Incremental
     @get:PathSensitive(PathSensitivity.NAME_ONLY)
     @get:InputDirectory
-    var examplesDirectory: DirectoryProperty = project.objects.directoryProperty().also {
+    val examplesDirectory: DirectoryProperty = project.objects.directoryProperty().also {
         it.set(generatedExamplesDirectory(project))
     }
 
@@ -166,12 +169,21 @@ open class DocsifyTask @Inject constructor(
         description = "docsify"
     }
 
-    val docsifySources = javaClass.classLoader.getResource("docsify")
+    private val docsifySources = javaClass.classLoader.getResource("docsify")
     val dokgenBuildDir = File(project.buildDir, PLUGIN_NAME)
+
+    @OutputDirectory
     val dokgenMdDir = File(dokgenBuildDir, "md")
+
+    @OutputDirectory
     val docsifyBuildDir = File(project.buildDir, "$PLUGIN_NAME/docsify")
+
+    @OutputDirectory
     var docsifyDocsDir: File = File(docsifyBuildDir, "docs")
+
+    @OutputDirectory
     var mediaOutputDirectory: File = File(docsifyDocsDir, "media")
+    @OutputDirectory
     var assetsOutputDirectory: File = File(docsifyDocsDir, "assets")
 
     @TaskAction
@@ -228,6 +240,8 @@ open class DocsifyTask @Inject constructor(
 }
 
 open class ServeDocsTask @Inject constructor() : DefaultTask() {
+
+    @InputDirectory
     val docsifyBuildDir = File(project.buildDir, "$PLUGIN_NAME/docsify")
 
     init {

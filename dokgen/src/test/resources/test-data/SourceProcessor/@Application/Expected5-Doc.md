@@ -1,5 +1,0 @@
-```kotlin
-run {
-    println("hello")
-}
-```
