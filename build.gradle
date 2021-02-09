@@ -35,6 +35,7 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-compiler-embeddable:$kotlin_version"
 
     implementation gradleApi()
+    implementation "org.jetbrains.kotlin:kotlin-gradle-plugin:1.4.30"
 
     // assertion
     testImplementation "org.jetbrains.kotlin:kotlin-test:$kotlin_version"

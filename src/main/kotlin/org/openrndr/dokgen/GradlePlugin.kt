@@ -8,9 +8,9 @@ import org.gradle.api.Project
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.*
-import org.gradle.api.tasks.incremental.IncrementalTaskInputs
 import org.gradle.work.Incremental
 import org.gradle.work.InputChanges
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.io.File
 import java.io.Serializable
 import javax.inject.Inject
@@ -30,16 +30,16 @@ fun generatedExamplesForExportDirectory(project: Project): File {
 // this class provides the configuration dsl
 // the inner classes represent configurable data
 // the methods represent closures in the dsl through which configuration can be set
-open class DokGenPluginExtension @Inject constructor(objectFactory: ObjectFactory):Serializable {
-    open class ExamplesConf: Serializable {
+open class DokGenPluginExtension @Inject constructor(objectFactory: ObjectFactory) : Serializable {
+    open class ExamplesConf : Serializable {
         var webRootUrl: String? = null
     }
 
-    open class RunnerConf: Serializable {
+    open class RunnerConf : Serializable {
         var jvmArgs = mutableListOf<String>()
     }
 
-    open class DocsifyConf: Serializable {
+    open class DocsifyConf : Serializable {
         var assets: List<File>? = null
         var media: List<File>? = null
     }
@@ -70,7 +70,8 @@ open class DokGenPluginExtension @Inject constructor(objectFactory: ObjectFactor
 
 abstract class ProcessSourcesTask @Inject constructor(
     @Input
-    val examplesConf: DokGenPluginExtension.ExamplesConf?) : DefaultTask() {
+    val examplesConf: DokGenPluginExtension.ExamplesConf?
+) : DefaultTask() {
     init {
         group = PLUGIN_NAME
         description = "processes into markdown and examples"
@@ -96,8 +97,8 @@ abstract class ProcessSourcesTask @Inject constructor(
     @TaskAction
     fun run(inputChanges: InputChanges) {
         println(
-                if (inputChanges.isIncremental) "Executing incrementally"
-                else "Executing non-incrementally"
+            if (inputChanges.isIncremental) "Executing incrementally"
+            else "Executing non-incrementally"
         )
         val toProcess = mutableListOf<File>()
         for (change in inputChanges.getFileChanges(inputDir)) {
@@ -186,6 +187,7 @@ open class DocsifyTask @Inject constructor(
 
     @OutputDirectory
     var mediaOutputDirectory: File = File(docsifyDocsDir, "media")
+
     @OutputDirectory
     var assetsOutputDirectory: File = File(docsifyDocsDir, "assets")
 
@@ -264,7 +266,8 @@ open class ServeDocsTask @Inject constructor() : DefaultTask() {
 
 class GradlePlugin : Plugin<Project> {
     override fun apply(project: Project) {
-        val conf = project.extensions.create(PLUGIN_NAME,
+        val conf = project.extensions.create(
+            PLUGIN_NAME,
             DokGenPluginExtension::class.java,
             project.objects
         )
@@ -276,21 +279,26 @@ class GradlePlugin : Plugin<Project> {
             val gess = sourceSets.create("GeneratedExamples")
             gess.compileClasspath += mss.compileClasspath
             gess.runtimeClasspath += mss.runtimeClasspath
-
             gess.java.srcDir(generatedExamplesDirectory(project))
-
 
             val dokGenTask = project.tasks.create(PLUGIN_NAME)
             dokGenTask.group = PLUGIN_NAME
             dokGenTask.description = "do the work"
 
             val compileKotlinTask = project.tasks.getByPath("compileGeneratedExamplesKotlin")
-            val processSources = project.tasks.create("processSources", ProcessSourcesTask::class.java, conf.examplesConf)
+
+            (compileKotlinTask as KotlinCompile).apply {
+                this.kotlinOptions.jvmTarget = "1.8"
+                this.sourceCompatibility = "1.8"
+                this.targetCompatibility = "1.8"
+            }
+
+            val processSources =
+                project.tasks.create("processSources", ProcessSourcesTask::class.java, conf.examplesConf)
             val runExamples = project.tasks.create("runExamples", RunExamplesTask::class.java, conf.runnerConf)
 
-            println("compileKotlinTask:")
-            println(compileKotlinTask)
 
+            compileKotlinTask
             runExamples.dependsOn(processSources)
             runExamples.dependsOn(compileKotlinTask)
             runExamples.outputs.upToDateWhen {
