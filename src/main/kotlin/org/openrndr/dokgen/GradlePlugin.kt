@@ -147,11 +147,10 @@ open class RunExamplesTask @Inject constructor(
         val ss = sourceSetContainer.getByName("GeneratedExamples")
         val execClasses = DokGen.getExamplesClassNames(toRun, examplesDirectory.get().asFile)
 
-        execClasses.forEach { klass ->
+        for ((index, klass) in execClasses.withIndex()) {
+            println("Running example [${index+1}/${execClasses.size}]: ${klass}")
             try {
                 project.javaexec { spec ->
-                    println("rcp: ${ss.runtimeClasspath.toList().joinToString(", ")}")
-                    println("ccp: ${ss.compileClasspath.toList().joinToString(", ")}")
                     spec.classpath = ss.runtimeClasspath
                     runnerConf?.let {
                         spec.jvmArgs = it.jvmArgs
@@ -176,7 +175,7 @@ open class DocsifyTask @Inject constructor(
     private val docsifySources = javaClass.classLoader.getResource("docsify")
     val dokgenBuildDir = File(project.buildDir, PLUGIN_NAME)
 
-    @OutputDirectory
+    @InputDirectory
     val dokgenMdDir = File(dokgenBuildDir, "md")
 
     @OutputDirectory
