@@ -118,7 +118,8 @@ abstract class ProcessSourcesTask @Inject constructor(
 }
 
 open class RunExamplesTask @Inject constructor(
-    private val runnerConf: DokGenPluginExtension.RunnerConf?
+    @Input
+    val runnerConf: DokGenPluginExtension.RunnerConf?
 ) : DefaultTask() {
     init {
         group = PLUGIN_NAME
@@ -129,9 +130,14 @@ open class RunExamplesTask @Inject constructor(
     @get:Incremental
     @get:PathSensitive(PathSensitivity.NAME_ONLY)
     @get:InputDirectory
+//    @InputDirectory
     val examplesDirectory: DirectoryProperty = project.objects.directoryProperty().also {
         it.set(generatedExamplesDirectory(project))
     }
+
+
+    @OutputDirectory
+    val outputDirectory = File("media")
 
     @TaskAction
     fun execute(inputChanges: InputChanges) {
@@ -294,15 +300,12 @@ class GradlePlugin : Plugin<Project> {
 
             val processSources =
                 project.tasks.create("processSources", ProcessSourcesTask::class.java, conf.examplesConf)
-            val runExamples = project.tasks.create("runExamples", RunExamplesTask::class.java, conf.runnerConf)
 
+            val runExamples =
+                project.tasks.create("runExamples", RunExamplesTask::class.java, conf.runnerConf)
 
-            compileKotlinTask
-            runExamples.dependsOn(processSources)
+            compileKotlinTask.dependsOn(processSources)
             runExamples.dependsOn(compileKotlinTask)
-            runExamples.outputs.upToDateWhen {
-                true
-            }
 
             dokGenTask.dependsOn(runExamples)
 
