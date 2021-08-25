@@ -37,12 +37,12 @@ body.loaded{
     padding-right: 10px;
 }
 
-.header .linkhoder {
+.header .link-wrapper {
     padding:5px;
       background-color:rgb(60, 60, 60);
 }
 
-.header .linkhoder .link {
+.header .link-wrapper .link {
     padding:10px;
     float: right;
     background-color:rgb(60, 60, 60);
@@ -50,7 +50,7 @@ body.loaded{
     
 }
 
-.header .linkhoder .link  a { 
+.header .link-wrapper .link  a {
     text-decoration: none !important;
 }
 
@@ -85,7 +85,7 @@ body.loaded{
 }
 
 .clear-button svg circle {
-    fill: #fdd0dd !important;
+    fill: #ffc0cb !important;
 
 }
 
@@ -103,9 +103,11 @@ body.loaded{
 }
 
 .sidebar {
-    background: black;
+    background: #111;
     z-index: 2;
+    color: #fff;
 }
+
 
 
 h1,h2,h3,h4  {
@@ -113,12 +115,12 @@ h1,h2,h3,h4  {
 }
 
 .sidebar-nav *{
-    font-size: 0.95em !important;
+    font-size: 1.0em !important;
     line-height: 1.2em;
 }
 
 span {
-    color:#fdd0dd !important;
+    color:#ffc0cb !important;
 
 }
 
@@ -127,7 +129,7 @@ p {
 }
 
 .sidebar span {
-     color:#fdd0dd !important;
+     color:#ffc0cb !important;
 
 }
 
@@ -138,7 +140,7 @@ p {
 }
 
 .active {
-    color:#fdd0dd !important;
+    color:#ffc0cb !important;
 }
 
 .sidebar-nav  a {
@@ -146,7 +148,7 @@ p {
 }
 
 .sidebar .app-name-link {
-    color:#fdd0dd !important;
+    color:#ffc0cb !important;
     text-align: left;
 }
 
@@ -156,9 +158,15 @@ p {
 }
 
 .sidebar-nav .active a {
-    color:#fdd0dd !important;
+    color:#ffc0cb !important;
     border: none !important;
     font-weight: 400 !important;
+}
+
+.sidebar ul {
+    font-weight: bold;
+    margin: 0 0 16px 15px;
+
 }
 
 
@@ -178,7 +186,7 @@ code {
 }
 
 a {
-    color:gray !important;
+    color:#ddd !important;
 }
 
 td {
@@ -214,7 +222,7 @@ a:visited {
 /* mouse over link */
 a:hover {
     text-decoration: none !important;
-    color:#fdd0dd !important;
+    color:#ffc0cb !important;
 }
 
 /* selected link */
@@ -225,7 +233,6 @@ a:active {
 video, img {
   width: 100%;
 }
-
 
 
 
