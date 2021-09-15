@@ -179,6 +179,8 @@ open class DocsifyTask @Inject constructor(
     }
 
     private val docsifySources = javaClass.classLoader.getResource("docsify")
+
+    @InputDirectory
     val dokgenBuildDir = File(project.buildDir, PLUGIN_NAME)
 
     @InputDirectory
