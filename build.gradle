@@ -1,10 +1,10 @@
 buildscript {
-    ext.kotlin_version = '1.4.30'
+    ext.kotlin_version = '1.5.30'
     ext.spek_version = '2.0.15'
 
     repositories {
         mavenCentral()
-        jcenter()
+        //jcenter()
     }
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
@@ -24,7 +24,7 @@ version '2.0-SNAPSHOT'
 sourceCompatibility = 1.8
 
 repositories {
-    jcenter()
+    //jcenter()
     mavenCentral()
     mavenLocal()
 }
