@@ -6,7 +6,7 @@ package $pkg
 
 ${imports.joinToString("\n")}
 
-fun main(args: Array<String>) {
+fun main() {
 ${body.prependIndent(List(4) { " " }.joinToString(""))}
 }
     """
